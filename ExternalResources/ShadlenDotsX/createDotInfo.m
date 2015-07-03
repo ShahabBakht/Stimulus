@@ -179,8 +179,8 @@ dotInfo.keySpace = KbName('space');
 dotInfo.keyReturn = KbName('return');
 
 if inputtype == 1
-    dotInfo.keyLeft = KbName('leftarrow');
-    dotInfo.keyRight = KbName('rightarrow');
+    dotInfo.keyLeft = KbName('left');
+    dotInfo.keyRight = KbName('right');
 else
     mouse_left = 1;
     mouse_right = 2;

@@ -21,8 +21,8 @@ end
 % For each set of dots, all the information of "apertureXYD, speed, coh, dir,
 % maxDotTime" must be provided.
 dotInfo.numDotField = 2;
-dotInfo.apXYD = [-50 0 50; 50 0 50]; 
-%dotInfo.apXYD = [150 0 50; -150 0 50];  
+% dotInfo.apXYD = [-50 0 50; 50 0 50]; 
+dotInfo.apXYD = [150 0 50; -150 0 50];  
 dotInfo.speed = [50 50];
 dotInfo.coh = [512 512];
 dotInfo.dir = [0 90];

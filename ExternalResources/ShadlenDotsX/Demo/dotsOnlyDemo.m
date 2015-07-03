@@ -8,7 +8,7 @@ try
     
     % Initialize the screen
     % touchscreen is 34, laptop is 32, viewsonic is 38
-    screenInfo = openExperiment(34,50,1);
+    screenInfo = openExperiment(34,50,0);
         
     % Initialize dots
     % Check createMinDotInfo to change parameters
