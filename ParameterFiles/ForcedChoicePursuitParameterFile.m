@@ -7,8 +7,7 @@ S.CueTime         =   200;
 S.GapTime         =   500;
 S.SaveFolder      =   'C:\Shahab\Stimulus Objects';
 
-% 'sine' and 'LisbergerParadigm'
-S.TRIAL_TIMER     =   10000;          % For 'sine' - ms
+S.TRIAL_TIMER     =   10000; 
 S.type = {'0_pi','0','pi'}; 
 
 S.NumConditions = length(S.type);
