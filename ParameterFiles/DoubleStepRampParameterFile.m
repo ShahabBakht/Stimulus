@@ -5,7 +5,7 @@ S.PPD_Y             =   20;
 S.FixationTimeMin   =   1000;
 S.FixationTimeMax   =   1000;
 S.GapTime           =   500;
-S.SaveFolder          =   'D:\Data\Eye Tracking\Stimulus Objects';
+S.SaveFolder          =   'C:\Shahab\Stimulus Objects';
 
 
 % 'sine' and 'LisbergerParadigm'

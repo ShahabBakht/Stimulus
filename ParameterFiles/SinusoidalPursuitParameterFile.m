@@ -5,7 +5,7 @@ S.PPD_Y           =   20;
 S.FixationTimeMin =   1000;
 S.FixationTimeMax =   1500;
 S.GapTime         =   500;
-S.SaveFolder      =   'D:\Data\Eye Tracking\Stimulus Objects';
+S.SaveFolder      =   'C:\Shahab\Stimulus Objects';
 S.TRIAL_TIMER     =   10000;          % For 'sine' - ms
 
 S.type = {...

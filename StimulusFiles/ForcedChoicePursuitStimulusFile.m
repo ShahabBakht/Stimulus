@@ -92,8 +92,8 @@ try
     % no sound and smaller targets
     el.targetbeep = 0;
     el.backgroundcolour = WhiteIndex(el.window);
-    backgroundcolour = GrayIndex(window);
-    el.calibrationtargetcolour= [255 0 0];
+    backgroundcolour = WhiteIndex(window);
+    el.calibrationtargetcolour= [0 0 0];
     % for lower resolutions you might have to play around with these values
     % a little. If you would like to draw larger targets on lower res
     % settings please edit PsychEyelinkDispatchCallback.m and see comments
@@ -322,7 +322,7 @@ try
         % we change the location of the drift correction to match that of
         % the target start position
         % Note drift correction does not accept fractionals in PTB!
-        EyelinkDoDriftCorrection(el,round(x),round(y));
+        EyelinkDoDriftCorrection(el);%,round(x1 + StepAmplitude*cos(Angle1)),round(y1 + StepAmplitude*sin(Angle1)));
         
         % STEP 7.3
         % start recording eye position (preceded by a short pause so that
