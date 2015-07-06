@@ -1,5 +1,5 @@
 
-S.NumTrials       =   5;             % Number of trials per condition
+S.NumTrials       =   20;             % Number of trials per condition
 S.PPD_X           =   20;            % Pixels per degree
 S.PPD_Y           =   20;              
 S.FixationTimeMin =   1000;
@@ -13,7 +13,7 @@ S.NumConditions = length(S.type);
 
 % Angle(rad) velocity(degree/s) amplitude(degree) -- For 'ramp'
 S.conditions = [...
-                 [0;10;10] [pi;10;10] ...
+                 [0;10;12] [pi;10;12] ...
                ];
 
         

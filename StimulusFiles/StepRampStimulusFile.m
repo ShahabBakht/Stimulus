@@ -216,7 +216,10 @@ try
             break
         end
         
-        
+        sine_plot_x = winWidth/2;
+        sine_plot_y = winHeight/2;
+        amplitudeX = winWidth/4;
+        amplitudeY = winHeight/4;
         perm = trials(:,order(i));
             
         perm(1)
