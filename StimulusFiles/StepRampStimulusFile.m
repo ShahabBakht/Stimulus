@@ -315,9 +315,7 @@ try
             Screen('FillOval', window,[255 0 0], ball);
             Screen('Flip', window);
             Eyelink('Message', 'SYNCTIME');
-            % STEP 7.5
-            % send the location of the target at each iteration so that
-            % target can be displayed in Dataviewer
+
             t = GetSecs - sttime;
             x = sine_plot_x + (velocityX * t) * PPD_X;
             y = sine_plot_y + (velocityY * t) * PPD_Y;
