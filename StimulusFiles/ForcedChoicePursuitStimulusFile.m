@@ -224,37 +224,16 @@ try
         perm = trials(:,order(i));
         permDir = DoP(order(i));    
 
-        % Add Eye-link messages here (see DoubleStepSaccades)
-        %
-        %%%%
-        
-        
-        % STEP 7.1
-        % Sending a 'TRIALID' message to mark the start of a trial in Data
-        % Viewer.  This is different than the start of recording message
-        % START that is logged when the trial recording begins. The viewer
-        % will not parse any messages, events, or samples, that exist in
-        % the data file prior to this message.
-%         Eyelink('Message', 'TRIALID %d', i);
+
         
         % This supplies the title at the bottom of the eyetracker display
-%         Eyelink('command', 'record_status_message "TRIAL %d/%d %s"', i,6, char(type(i)));
         % Before recording, we place reference graphics on the host display
         % Must be in offline mode to transfer image to Host PC
         Eyelink('Command', 'set_idle_mode');
         % clear tracker display and draw box at center
         Eyelink('Command', 'clear_screen %d', 0);
         
-        % calculate locations of target peripheries so that we can draw
-        % matching lines and boxes on host pc 
-        %**** Don't uncomment this ****
-%         Eyelink('command', 'draw_filled_box %d %d %d %d 2' ,floor(winWidth/2-amplitudeX)-20, floor(winHeight/2-20), floor(winWidth/2-amplitudeX)+20, floor(winHeight/2+20));
-%         Eyelink('command', 'draw_line %d %d %d %d 2' ,floor(winWidth/2-amplitudeX), floor(winHeight/2), floor(winWidth/2+amplitudeX), floor(winHeight/2));
-%         Eyelink('command', 'draw_filled_box %d %d %d %d 2' ,floor(winWidth/2+amplitudeX)-20, floor(winHeight/2-20), floor(winWidth/2+amplitudeX)+20, floor(winHeight/2+20));
-%         Eyelink('command', 'draw_filled_box %d %d %d %d 2' ,floor(winWidth/2-20), floor((winHeight/2-amplitudeY)-20), floor(winWidth/2+20), floor(winHeight/2-amplitudeY)+20);
-%         Eyelink('command', 'draw_line %d %d %d %d 2' ,floor(winWidth/2), floor(winHeight/2-amplitudeY), floor(winWidth/2), floor(winHeight/2+amplitudeY));
-%         Eyelink('command', 'draw_filled_box %d %d %d %d 2' ,floor(winWidth/2-20), floor(winHeight/2+amplitudeY)-20, floor(winWidth/2+20), floor(winHeight/2+amplitudeY)+20);
-        
+
         % The coordinates of the fixation target 
         dots(2,1) = winHeight/2;
         dots(1,1) = winWidth/2;
@@ -335,7 +314,7 @@ try
         % record a few samples before we actually start displaying
         % otherwise you may lose a few msec of data
         WaitSecs(0.1);
-%         
+        
         % get eye that's tracked
         eye_used = Eyelink('EyeAvailable');
         
@@ -355,11 +334,9 @@ try
             if RoG > 0
                 CueColor = [255 0 0];
                 NoCue = [0 255 0];
-%                 cc = 1;
             elseif RoG <= 0
                 CueColor = [0 255 0];
                 NoCue = [255 0 0];
-%                 cc = 2;
             end
         else
             CueColor = [0 0 255];
@@ -382,19 +359,15 @@ try
         % Choice of the correct target's color based on the cue color 
         if permDir == 0
                 UPcolor = CueColor;
-%                 uc = 1;
                 DOWNcolor = NoCue;
-%                 dc = 2;
         elseif permDir == pi
                 DOWNcolor = CueColor;
-%                 dc = 1;
                 UPcolor = NoCue;
-%                 uc = 2;
         elseif perm(1) == perm(2)
                 DOWNcolor = [0 0 255];
                 UPcolor = [0 0 255];
         end
-%         TrialColors(i,:) = [cc, uc, dc];
+        
         while GetSecs < trialTime
             
             % STEP 7.4
@@ -453,37 +426,14 @@ try
         
         Screen('FillRect', window, backgroundcolour);
         Screen('Flip', window);
-        
-        % STEP 7.7
-        % Send out necessary integration messages for data analysis
-        % See "Protocol for EyeLink Data to Viewer Integration-> Interest
-        % Area Commands" section of the EyeLink Data Viewer User Manual
-        % IMPORTANT! Don't send too many messages in a very short period of
-        % time or the EyeLink tracker may not be able to write them all
-        % to the EDF file.
-        % Consider adding a short delay every few messages.
-        WaitSecs(0.001);
-        % Send messages to report trial condition information
-        % Each message may be a pair of trial condition variable and its
-        % corresponding value follwing the '!V TRIAL_VAR' token message
-        % See "Protocol for EyeLink Data to Viewer Integration-> Trial
-        % Message Commands" section of the EyeLink Data Viewer User Manual
-        WaitSecs(0.001);
-  
+   
         
         % a limitation of the currect ETB only accepts ints as input to
         % messages and commands a possible work around is given below
         
         msg1 = sprintf('!V TRIAL_VAR freq_x %2.3f ', trials(1,i));
         msg2 = sprintf('!V TRIAL_VAR freq_y %2.3f ', trials(2,i));
-        
-        % STEP 7.8
-        % Sending a 'TRIAL_RESULT' message to mark the end of a trial in
-        % Data Viewer. This is different than the end of recording message
-        % END that is logged when the trial recording ends. The viewer will
-        % not parse any messages, events, or samples that exist in the data
-        % file after this message.
-      
+
     gapTime = GetSecs + GapTime/1000;
         while GetSecs < gapTime
         
@@ -506,7 +456,6 @@ try
     Eyelink('CloseFile');
     
     try
-%         fprintf('Receiving data file ''%s''\n', edfFile );
         status=Eyelink('ReceiveFile');
         if status > 0
             fprintf('ReceiveFile status %d\n', status);
