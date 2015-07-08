@@ -12,12 +12,40 @@ try
         
     % Initialize dots
     % Check createMinDotInfo to change parameters
+    for tr = 1:10
+            targets = setNumTargets(1); % initialize targets        
+
+        targets = newTargets(screenInfo,targets,[1],[0],[0],...
+        [5],[0,255,255]);
     dotInfo = createDotInfo(1);
-
+    dotInfo.numDotField = 1;
+    % dotInfo.apXYD = [-50 0 50; 50 0 50];
+    dotInfo.apXYD = [0 0 50];
+    dotInfo.speed = [0];
+    dotInfo.cohSet = [0];
+    dotInfo.dir = [0];
+    dotInfo.maxDotTime = [1];
+    
+    dotInfo.trialtype = [2 1];
+    dotInfo.dotColor = [255 255 255]; % default white dots
+    dotInfo.dotSize = 2;
     [frames, rseed, start_time, end_time, response, response_time] = ...
-        dotsX(screenInfo, dotInfo);    
-    pause(0.5)
+        dotsX(screenInfo, dotInfo,targets); 
+    
+    
+    pause(0)
+    dotInfo.initTime = .1;
+    dotInfo.speed = [20];
+    dotInfo.cohSet = [.75];
+    dotInfo.dir = [0];
+    dotInfo.maxDotTime = [.75];
+    dotInfo.apXYD = [0 0 100];
+    
+    dotInfo.isMovingCenter = true;
+    [frames, rseed, start_time, end_time, response, response_time] = ...
+        dotsX(screenInfo, dotInfo);
 
+    end
     % Clear the screen and exit
     closeExperiment;
     

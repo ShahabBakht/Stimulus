@@ -15,7 +15,9 @@ if nargin < 1
 end
 
 dotInfo.cohSet = [0.75];
-
+% SB: this variable is added by Shahab Bakhtiari to model a moving patch of
+% random dots. It should be set to true for the center of mask moving.
+dotInfo.isMovingCenter = false;
 % Left and right are the only directions that make sense for keypress experiment 
 % at the moment. For the keypress experiment, the first number will be associated 
 % with the left arrow, and the second with the right arrow (0 degrees is to the right)
