@@ -287,8 +287,9 @@ while continue_show
         dots2Display(:,outCircle) = NaN;
         if dotInfo.isMovingCenter && (GetSecs - t1) > dotInfo.initTime
            
-            Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2)+[dotInfo.initTime*dotInfo.speed+(GetSecs-t1)*dotInfo.speed,0]);
-           
+            Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2)+...
+                [dotInfo.initTime*dotInfo.speed*10+(GetSecs-t1)*dotInfo.speed*10,0]);
+           %
         else
             Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2));
         end
@@ -392,6 +393,6 @@ Screen('Flip',curWindow,0,dontclear);
 showTargets(screenInfo,targets,showtar);
 
 end_time = GetSecs;
-% Priority(0);
+Priority(0);
 
 
