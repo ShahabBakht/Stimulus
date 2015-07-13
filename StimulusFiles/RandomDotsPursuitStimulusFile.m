@@ -305,7 +305,7 @@ try
             dotInfo.speed = [0];
             dotInfo.cohSet = [0];
             dotInfo.dir = [0];
-            dotInfo.maxDotTime = [FixationTimeMin];
+            dotInfo.maxDotTime = [FixationTimeMin/1000];
             
             dotInfo.trialtype = [2 1];
             dotInfo.dotColor = [255 255 255]; % default white dots
@@ -327,7 +327,7 @@ try
             dotInfo.cohSet = [.75];
 
             dotInfo.dir = [0];
-            dotInfo.maxDotTime = [1];
+            dotInfo.maxDotTime = [TRIAL_TIMER/1000];
 
 
             dotInfo.apXYD = [-20 0 40];
