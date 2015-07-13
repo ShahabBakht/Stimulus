@@ -293,7 +293,7 @@ try
         % get eye that's tracked
         eye_used = Eyelink('EyeAvailable');
         
-        fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
+%         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
 %         while GetSecs < fixationTime
             
             targets = setNumTargets(1);
@@ -301,11 +301,10 @@ try
                 [5],[0,255,255]);
             dotInfo = createDotInfo(1);
             dotInfo.numDotField = 1;
-            % dotInfo.apXYD = [-50 0 50; 50 0 50];
             dotInfo.apXYD = [0 0 50];
             dotInfo.speed = [0];
             dotInfo.cohSet = [0];
-%             dotInfo.dir = [0];
+            dotInfo.dir = [0];
             dotInfo.maxDotTime = [FixationTimeMin];
             
             dotInfo.trialtype = [2 1];
@@ -321,19 +320,21 @@ try
         
 %         end
 
-            initiatialTime = GetSecs + (InitialTime/1000);
+%             initiatialTime = GetSecs + (InitialTime/1000);
 %         while GetSecs < initiatialTime
+            dotInfo.initTime = 0;
             dotInfo.speed = [10];
             dotInfo.cohSet = [.75];
-%             dotInfo.dir = [0];
-            dotInfo.maxDotTime = [InitialTime];
 
-            dotInfo.trialtype = [2 1];
-            dotInfo.dotColor = [255 255 255]; % default white dots
-            dotInfo.dotSize = 2;
+            dotInfo.dir = [0];
+            dotInfo.maxDotTime = [1];
 
+
+            dotInfo.apXYD = [-20 0 40];
+            dotInfo.trialtype = [2, 1];
+            dotInfo.isMovingCenter = true;
             [frames, rseed, start_time, end_time, response, response_time] = ...
-                dotsX(screenInfo, dotInfo);
+                dotsX(screenInfo, dotInfo,targets );
 %             Screen('FillRect', window, backgroundcolour);
 %             Screen('FillOval', window,[255 0 0], [(dots(1,1) - 10), (dots(2,1) - 10), (dots(1,1) + 10), (dots(2,1) + 10)]);
 %             Screen('Flip', window);

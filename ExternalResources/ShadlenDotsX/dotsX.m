@@ -288,7 +288,7 @@ while continue_show
         if dotInfo.isMovingCenter && (GetSecs - t1) > dotInfo.initTime
            
             Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2)+...
-                [dotInfo.initTime*dotInfo.speed*10+(GetSecs-t1)*dotInfo.speed*10,0]);
+                [dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*10+(GetSecs-t1)*dotInfo.speed*cos(dotInfo.dir)*10,0]);
            %
         else
             Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2));

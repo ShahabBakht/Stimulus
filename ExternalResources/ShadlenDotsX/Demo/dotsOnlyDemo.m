@@ -20,10 +20,21 @@ try
     dotInfo = createDotInfo(1);
     dotInfo.numDotField = 1;
     % dotInfo.apXYD = [-50 0 50; 50 0 50];
-    dotInfo.apXYD = [-20 0 40];
+    RandomDraw = randn;
+    if RandomDraw > 0
+        1
+        setdir = 0;
+        stepsize = -20;
+    elseif RandomDraw <= 0
+        0
+        setdir = 180;
+        stepsize = 20;
+    end
+    
+    dotInfo.apXYD = [stepsize 0 40];
     dotInfo.speed = [0];
     dotInfo.cohSet = [0];
-    dotInfo.dir = [0];
+    dotInfo.dir = [setdir];
     dotInfo.maxDotTime = [1];
     
     dotInfo.trialtype = [2 1];
@@ -34,17 +45,21 @@ try
     
     
     pause(0)
-    dotInfo.initTime = .125;
-    dotInfo.speed = [5];
-    dotInfo.cohSet = [.75];
-    dotInfo.dir = [0];
-    dotInfo.maxDotTime = [5];
-    dotInfo.apXYD = [-20 0 40];
+    dotInfo.initTime = 0;
+    dotInfo.speed = [10];
+    dotInfo.cohSet = [.05];
     
+    dotInfo.dir = [setdir];
+    dotInfo.maxDotTime = [1];
+    
+    
+    dotInfo.apXYD = [stepsize 0 40];
+    dotInfo.trialtype = [2, 1];
     dotInfo.isMovingCenter = true;
     [frames, rseed, start_time, end_time, response, response_time] = ...
-        dotsX(screenInfo, dotInfo);
+        dotsX(screenInfo, dotInfo,targets );
  pause(1)
+clear RandomDraw
     end
     % Clear the screen and exit
    
