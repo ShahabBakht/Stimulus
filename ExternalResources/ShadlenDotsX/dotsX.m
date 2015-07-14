@@ -139,7 +139,7 @@ center = repmat(screenInfo.center,size(dotInfo.apXYD(:,1)));
 % Change x,y coordinates to pixels (y is inverted - pos on bottom, neg. on top)
 center = [center(:,1) + dotInfo.apXYD(:,1)/10*screenInfo.ppd center(:,2) - ...
     dotInfo.apXYD(:,2)/10*screenInfo.ppd]; % where you want the center of the aperture
-center(:,3) = dotInfo.apXYD(:,3)/2/10*screenInfo.ppd; % add diameter
+center(:,3) = dotInfo.apXYD(:,3)/10*screenInfo.ppd; % add diameter
 d_ppd = floor(apD/10 * screenInfo.ppd);	% size of aperture in pixels
 dotSize = dotInfo.dotSize; % probably better to leave this in pixels, but not sure
 
