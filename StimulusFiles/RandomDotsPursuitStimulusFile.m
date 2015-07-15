@@ -1,9 +1,11 @@
+% To fix:
+% 1- The direction of motion currently is only 0 and 180 degrees. The other
+% angles should be added which needs minor modifications in the codes.
+
 function RandomDotsPursuitStimulusFile(S)
 
 
-NumTrials                   =   S.NumTrials;         % Number of trials per condition
-% PPD_X                       =   S.PPD_X;             % Pixels per degree
-% PPD_Y                       =   S.PPD_Y;              
+NumTrials                   =   S.NumTrials;         % Number of trials per condition         
 FixationTimeMin_noDots      =   S.FixationTimeMin_noDots;
 FixationTimeMax_noDots      =   S.FixationTimeMax_noDots;
 FixationTimeMin_withDots    =   S.FixationTimeMin_withDots;
@@ -17,7 +19,7 @@ type = S.type;
 NumConditions = S.NumConditions;
 conditions = S.conditions;
 
-trials = nan(4,NumConditions*NumTrials);
+trials = nan(5,NumConditions*NumTrials);
 for condcount = 1:NumConditions
     trials(:,((condcount-1)*NumTrials + 1):condcount*NumTrials) = repmat(conditions(:,condcount),1,NumTrials);
 end
@@ -302,11 +304,12 @@ try
             setdir = perm(1);
             setspeed = perm(2);
             setcoh = perm(3);
-            setpachdiam = perm(4);
-            
+            contrast = perm(4)/100;
+            setpachdiam = perm(5);
+            setstepsize = setspeed*0.15;
             targets = setNumTargets(1);
             targets = newTargets(screenInfo,targets,[1],[0],[0],...
-                [10],[255,0,0]);
+                [4],[255,0,0]);
             showTargets(screenInfo, targets, [1]);
             pause(FixationTimeMin_noDots/1000);
             dotInfo = createDotInfo(1);
@@ -318,7 +321,7 @@ try
             dotInfo.maxDotTime = [FixationTimeMin_withDots/1000];
             
             dotInfo.trialtype = [2 1];
-            dotInfo.dotColor = [255 255 255]; % default white dots
+            dotInfo.dotColor = floor([255 255 255] * contrast); % default white dots
             dotInfo.dotSize = 2;
             
             [frames, rseed, start_time, end_time, response, response_time] = ...
@@ -337,7 +340,7 @@ try
             dotInfo.cohSet = [setcoh/100];
             dotInfo.dir = [setdir];
             dotInfo.maxDotTime = [TRIAL_TIMER/1000];
-            dotInfo.apXYD = [-20 0 setpachdiam*10];
+            dotInfo.apXYD = [-cos(setdir)*setstepsize*10 0 setpachdiam*10];
             dotInfo.trialtype = [2, 1];
             dotInfo.isMovingCenter = true;
 %             Eyelink('Message', 'SYNCTIME');
