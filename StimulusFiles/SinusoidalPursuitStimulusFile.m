@@ -165,7 +165,8 @@ try
     % allow to use the big button on the eyelink gamepad to accept the
     % calibration/drift correction target
     Eyelink('command', 'button_function 5 "accept_target_fixation"');
-    
+    Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
+    Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
        
     %%%%%%%%%%
     % STEP 6 %

@@ -86,9 +86,9 @@ try
         % this eliminates affects of changes in luminosity between screens
         % no sound and smaller targets
         el.targetbeep = 0;
-        el.backgroundcolour = WhiteIndex(el.window);
-        backgroundcolour = WhiteIndex(window);
-        el.calibrationtargetcolour= [0 0 0];
+        el.backgroundcolour = BlackIndex(el.window);
+%         el.backgroundcolour = Index(window);
+        el.calibrationtargetcolour= [255 255 255];
         % for lower resolutions you might have to play around with these values
         % a little. If you would like to draw larger targets on lower res
         % settings please edit PsychEyelinkDispatchCallback.m and see comments
@@ -172,7 +172,8 @@ try
     % allow to use the big button on the eyelink gamepad to accept the
     % calibration/drift correction target
     Eyelink('command', 'button_function 5 "accept_target_fixation"');
-    
+    Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
+    Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
        
     %%%%%%%%%%
     % STEP 6 %
@@ -247,7 +248,7 @@ try
         amplitude = perm(3);
         velocityX = velocity * cos(Angle);
         velocityY = velocity * sin(Angle);
-        StepAmplitude = 0.2*velocity* (PPD_X^2 + PPD_Y^2)^0.5;
+        StepAmplitude = 0.15*velocity* (PPD_X^2 + PPD_Y^2)^0.5;
         sine_plot_x = sine_plot_x - StepAmplitude*cos(Angle);
         sine_plot_y = sine_plot_y - StepAmplitude*sin(Angle);
 
@@ -295,7 +296,7 @@ try
         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
         while GetSecs < fixationTime
         
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
             Screen('FillOval', window,[255 0 0], [(dots(1,1) - 10), (dots(2,1) - 10), (dots(1,1) + 10), (dots(2,1) + 10)]);
             Screen('Flip', window);
         
@@ -311,7 +312,7 @@ try
             % Enable alpha blending with proper blend-function. We need it
             % for drawing of smoothed points:
             Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
             Screen('FillOval', window,[255 0 0], ball);
             Screen('Flip', window);
             Eyelink('Message', 'SYNCTIME');
@@ -338,7 +339,7 @@ try
         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
         while GetSecs < fixationTime
         
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
             Screen('FillOval', window,[255 0 0], [(x - 10), (y - 10), (x + 10), (y + 10)]);
             Screen('Flip', window);
         
@@ -348,14 +349,14 @@ try
         % add 100 msec of data to catch final events and blank display
         WaitSecs(0.1);
         Eyelink('StopRecording');
-        Screen('FillRect', window, backgroundcolour);
+        Screen('FillRect', window, el.backgroundcolour);
         Screen('Flip', window);
 
       
         gapTime = GetSecs + GapTime/1000;
         while GetSecs < gapTime
         
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
             Screen('Flip', window);
         
         end

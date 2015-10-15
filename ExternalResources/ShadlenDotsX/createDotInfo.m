@@ -176,13 +176,13 @@ dotInfo.maxDotsPerFrame = 150;   % by trial and error.  Depends on graphics card
 % The value of 53 was established for a 7100 with native graphics card.
 
 % possible keys active during trial
-dotInfo.keyEscape = KbName('esc');
+dotInfo.keyEscape = KbName('ESCAPE');
 dotInfo.keySpace = KbName('space');
 dotInfo.keyReturn = KbName('return');
 
 if inputtype == 1
-    dotInfo.keyLeft = KbName('left');
-    dotInfo.keyRight = KbName('right');
+    dotInfo.keyLeft = KbName('LeftArrow');
+    dotInfo.keyRight = KbName('RightArrow');
 else
     mouse_left = 1;
     mouse_right = 2;

@@ -1,6 +1,7 @@
 
-%% select the type of stimulus here
+%% Parameters to set
 
+% select the type of stimulus here
 S.Type = {...
 %     'StepRamp' ...
 %     'DoubleStepRamp' ...
@@ -8,6 +9,10 @@ S.Type = {...
 %     'ForcedChoicePursuit' ...
     'RandomDotsPursuit' ...
 };
+
+% Select the percentage of screen horizontal and vertical coverage here
+S.ScreenCov_v = 0.4571;
+S.ScreenCov_h = 0.3556;
 
 
 %% run the parameter file

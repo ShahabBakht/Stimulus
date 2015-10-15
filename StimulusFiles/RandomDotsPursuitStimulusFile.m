@@ -65,12 +65,12 @@ try
     
     % Open a graphics window on the main screen
     % using the PsychToolbox's Screen function.
-    screenInfo = openExperiment(32,50,0);
+    screenInfo = openExperiment(90,57,2);
     window = screenInfo.curWindow;
 %     screenNumber=max(Screen('Screens'));
 %     [window, wRect]=Screen('OpenWindow', screenNumber, 0,[],32,2); %#ok<*NASGU>
 %     Screen(window,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-%     [winWidth, winHeight] = WindowSize(window);
+    [winWidth, winHeight] = WindowSize(window);
     
     % define sine function
 %     sine_plot_x = winWidth/2;
@@ -93,9 +93,10 @@ try
         % this eliminates affects of changes in luminosity between screens
         % no sound and smaller targets
         el.targetbeep = 0;
-%         el.backgroundcolour = WhiteIndex(el.window);
-        backgroundcolour = WhiteIndex(window);
-        el.calibrationtargetcolour= [0 0 0];
+        
+        el.backgroundcolour = BlackIndex(el.window);
+%         el.backgroundcolour = Index(window);
+        el.calibrationtargetcolour= [255 0 0];
         % for lower resolutions you might have to play around with these values
         % a little. If you would like to draw larger targets on lower res
         % settings please edit PsychEyelinkDispatchCallback.m and see comments
@@ -149,6 +150,8 @@ try
     
     % This command is crucial to map the gaze positions from the tracker to
     % screen pixel positions to determine fixation
+%     Eyelink('command','screen_phys_coords = %ld %ld %ld %ld', -160, 160, 160, -160);
+%     Eyelink('command','screen_distance = %ld %ld %ld %ld', -160, 160, 160, -160);
     Eyelink('command','screen_pixel_coords = %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
     Eyelink('message', 'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
     % set calibration type.
@@ -179,14 +182,16 @@ try
     % allow to use the big button on the eyelink gamepad to accept the
     % calibration/drift correction target
     Eyelink('command', 'button_function 5 "accept_target_fixation"');
-    
+    Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
+    Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
+ 
        
     %%%%%%%%%%
     % STEP 6 %
     %%%%%%%%%%
     
     % Hide the mouse cursor
-    Screen('HideCursorHelper', window);
+%     Screen('HideCursorHelper', window);
     % enter Eyetracker camera setup mode, calibration and validation
     EyelinkDoTrackerSetup(el);
     
@@ -306,7 +311,7 @@ try
             setcoh = perm(3);
             contrast = perm(4)/100;
             setpachdiam = perm(5);
-            setstepsize = setspeed*0.15;
+            setstepsize = setspeed*0.25;
             targets = setNumTargets(1);
             targets = newTargets(screenInfo,targets,[1],[0],[0],...
                 [4],[255,0,0]);
@@ -400,8 +405,7 @@ try
         
         % STEP 7.6
         % add 100 msec of data to catch final events and blank display
-        WaitSecs(0.1);
-        Eyelink('StopRecording');
+        
 %         Screen('FillRect', window, backgroundcolour);
 %         Screen('Flip', window);
 
@@ -413,6 +417,8 @@ try
 %             Screen('Flip', window);
 %         
 %         end
+        WaitSecs(0.1);
+        Eyelink('StopRecording');
     end
     
     
