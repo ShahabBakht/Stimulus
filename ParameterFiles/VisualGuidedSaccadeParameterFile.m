@@ -4,7 +4,7 @@ S.FixationTimeMax_noDots    =   1500;
 S.TRIAL_TIMER               =   1000;       % (ms)
 S.SaveFolder                =   'C:\Shahab\Stimulus Objects';
 S.type                      =   'step';             % 'step', 'gap', or 'overlap'
-
+S.TargetSize                =   2; % (degrees)
 TargetAngleMin = -pi;
 TargetAngleInterval = pi/4;
 TargetAngleMax = pi - TargetAngleInterval;
