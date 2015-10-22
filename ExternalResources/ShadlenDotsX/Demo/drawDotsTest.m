@@ -16,7 +16,7 @@ try
     AssertOpenGL;
     duration = 5; % how long to show the dots in seconds
 
-    curScreen = 1;
+    curScreen = 0;
     dontclear = 0;
 
     [curWindow, screenRect] = Screen('OpenWindow', curScreen, [0,0,0],[],32, 2);

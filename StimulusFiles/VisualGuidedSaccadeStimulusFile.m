@@ -27,7 +27,7 @@ end
 
 
 
-dummymode = 0;
+dummymode = 1;
 
 try
     %%%%%%%%%%
@@ -56,7 +56,7 @@ try
     
     % Open a graphics window on the main screen
     % using the PsychToolbox's Screen function.
-    screenInfo = openExperiment(90,57,2);
+    screenInfo = openExperiment(90,57,0);
     window = screenInfo.curWindow;
 
     [winWidth, winHeight] = WindowSize(window);
