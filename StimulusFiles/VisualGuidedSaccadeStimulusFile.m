@@ -8,7 +8,7 @@ SaveFolder                  =   S.SaveFolder;
 type                        =   S.type;             % 'step', 'gap', or 'overlap'
 NumConditions               =   S.NumConditions;
 conditions                  =   S.conditions;
-TargetSize                  =   S.TargetSize;    
+TargetSize                  =   S.TargetSize * 10;    
 
 trials = nan(2,NumConditions*NumTrials);
 for condcount = 1:NumConditions
@@ -27,7 +27,7 @@ end
 
 
 
-dummymode = 1;
+dummymode = 0;
 
 try
     %%%%%%%%%%
@@ -256,12 +256,12 @@ try
         
             setdir = perm(1);
             setamp = perm(2);
-            setx = setamp * cos(setdir);
-            sety = setamp * sin(setdir);
+            setx = floor(setamp * cos(setdir)) * 10;
+            sety = floor(setamp * sin(setdir)) * 10;
             % fixation point
             targets = setNumTargets(1);
             targets = newTargets(screenInfo,targets,[1],[0],[0],...
-                [4],[255,0,0]); 
+                [TargetSize],[255,0,0]); 
             showTargets(screenInfo, targets, [1]);
             FixationTime_noDots = (FixationTimeMin_noDots + (FixationTimeMax_noDots-FixationTimeMin_noDots) * rand);
             pause(FixationTime_noDots/1000);

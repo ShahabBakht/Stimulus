@@ -66,10 +66,10 @@ try
     [winWidth, winHeight] = WindowSize(window);
     
     % define sine function
-    sine_plot_x = winWidth/2;
-    sine_plot_y = winHeight/2;
-    amplitudeX = winWidth/4;
-    amplitudeY = winHeight/4;
+    sine_plot_x = (winWidth - 1)/2;
+    sine_plot_y = (winHeight - 1)/2;
+    amplitudeX = (winWidth - 1)/4;
+    amplitudeY = (winHeight - 1)/4;
     
     %%%%%%%%%%
     % STEP 3 %

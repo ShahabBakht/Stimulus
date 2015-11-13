@@ -201,6 +201,9 @@ Screen('DrawingFinished',curWindow,dontclear);
 % are replotted according to the speed/direction and coherence. Similarly, the 
 % same is done for the 2nd group, etc.
 t1 = GetSecs;
+if dotInfo.isMovingCenter && ~isempty(targets)
+    TargetInitialPosition = targets.rects(2,[1,3]);
+end
 while continue_show
     for df = 1 : dotInfo.numDotField
         % ss is the matrix with 3 sets of dot positions, dots from the last 2 
@@ -288,16 +291,23 @@ while continue_show
         if dotInfo.isMovingCenter && (GetSecs - t1) > dotInfo.initTime
            
             Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2)+...
-                [dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd,0]);
+                [dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd,0],1);
            %
         else
-            Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2));
+            Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2),1);
         end
     end
     
     % Draw targets
+    
     for i = showtar
-        Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
+        if dotInfo.isMovingCenter && size(targets.rects,1)>1  %changed
+%             targets.x(2) = targets.x(2) + dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd
+            targets.rects(2,[1,3]) = TargetInitialPosition + (GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd;
+            Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
+        else
+            Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
+        end
     end
  
     % Tell PTB to get ready while doing computations for next dots presentation

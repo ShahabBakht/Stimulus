@@ -2,8 +2,8 @@ function ExtendedStepRampStimulusFile(S)
 
 % set the parameters
 NumTrials       =   S.NumTrials;         % Number of trials per condition
-PPD_X           =   S.PPD_X;             % Pixels per degree
-PPD_Y           =   S.PPD_Y;
+% PPD_X           =   S.PPD_X;             % Pixels per degree
+% PPD_Y           =   S.PPD_Y;
 FixationTimeMin =   S.FixationTimeMin;
 FixationTimeMax =   S.FixationTimeMax;
 GapTime         =   S.GapTime;
@@ -21,15 +21,47 @@ end
 
 S.trials = trials;
 
+% set the eyelink file
+
+if ~IsOctave
+    commandwindow;
+else
+    more off;
+end
+
+
+
+dummymode = 0;
+
+
+%%%%%%%%%%
+% STEP 1 %
+%%%%%%%%%%
+
+% Added a dialog box to set your own EDF file name before opening
+% experiment graphics. Make sure the entered EDF file name is 1 to 8
+% characters in length and only numbers or letters are allowed.
+
+if IsOctave
+    edfFile = 'DEMO';
+else
+    prompt = {'Enter tracker EDF file name (1 to 8 letters or numbers)'};
+    dlg_title = 'Create EDF file';
+    num_lines= 1;
+    def     = {'DEMO'};
+    answer  = inputdlg(prompt,dlg_title,num_lines,def);
+    edfFile = answer{1};
+    fprintf('EDFFile: %s\n', edfFile );
+end
 
 % open the experiment screen
-screenInfo = openExperiment(90,57,2);
+screenInfo = openExperiment(90,57,0);
 window = screenInfo.curWindow;
 Screen(window,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 [winWidth, winHeight] = WindowSize(window);
 
 % set up the Eyelink
-el = SetupEyeLink(window);
+el = SetupEyeLink(S,window,edfFile);
 
 % start the main experiment
 order = randperm(NumTrials * NumConditions);
@@ -73,19 +105,20 @@ for i = 1 : (NumIterations)
     
     t = 0;
     Angle = perm(1);
-    velocity = perm(2);
-    amplitude = perm(3);
+    velocity = perm(2) * 10;
+    amplitude = perm(3) * 10;
     velocityX = velocity * cos(Angle);
     velocityY = velocity * sin(Angle);
     if velocityX > 0
-        FixationPositionX = sine_plot_x - 10;
+        FixationPositionX = -100;
     else
-        FixationPositionX = sine_plot_x + 10;
+        FixationPositionX = 100;
     end
-    FixationPositionY = sine_plot_y;
+    FixationPositionY = 0;
     
-    x = sine_plot_x + (velocityX * t);
-    y = sine_plot_y + (velocityY * t);
+    x = (velocityX * t);
+
+    y = (velocityY * t);
     
     if ((velocityX * t)^2 + (velocityY * t)^2) > amplitude^2
         StopFlag = true;
@@ -110,7 +143,7 @@ for i = 1 : (NumIterations)
     fixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
 
     targets = setNumTargets(2);
-    targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],diameter,[0 0 255;255 0 0]);    
+    targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],[diameter,diameter],[0 0 255;255 0 0]);
     showTargets(screenInfo, targets, [2]);
     WaitSecs(fixationTime);
     fixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
@@ -126,8 +159,8 @@ for i = 1 : (NumIterations)
         Eyelink('Message', 'SYNCTIME');
         
         t = GetSecs - sttime;
-        x = sine_plot_x + (velocityX * t) * PPD_X;
-        y = sine_plot_y + (velocityY * t) * PPD_Y;
+        x = (velocityX * t);
+        y = (velocityY * t);
         
         if ((velocityX * t)^2 + (velocityY * t)^2) > amplitude^2
             StopFlag = true;
@@ -138,7 +171,7 @@ for i = 1 : (NumIterations)
         if StopFlag
             break
         end
-        targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],diameter,[0 0 255;255 0 0]);
+        targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],[diameter,diameter],[0 0 255;255 0 0]);
         showTargets(screenInfo, targets, [1,2]);
         
         ball([1 3]) = [x-10 x+10];
@@ -152,6 +185,7 @@ for i = 1 : (NumIterations)
     WaitSecs(0.1);
     Eyelink('StopRecording');
     Screen('FillRect', window, el.backgroundcolour);
+%     Screen('FillRect', window, [0 0 0]);
     Screen('Flip', window);
     
     
@@ -159,6 +193,7 @@ for i = 1 : (NumIterations)
     while GetSecs < gapTime
         
         Screen('FillRect', window, el.backgroundcolour);
+% Screen('FillRect', window, [0 0 0]);
         Screen('Flip', window);
         
     end

@@ -65,11 +65,11 @@ try
     
     % Open a graphics window on the main screen
     % using the PsychToolbox's Screen function.
-    screenInfo = openExperiment(90,57,2);
+    screenInfo = openExperiment(90,57,0);
     window = screenInfo.curWindow;
 %     screenNumber=max(Screen('Screens'));
 %     [window, wRect]=Screen('OpenWindow', screenNumber, 0,[],32,2); %#ok<*NASGU>
-%     Screen(window,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Screen(window,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     [winWidth, winHeight] = WindowSize(window);
     
     % define sine function
@@ -311,7 +311,7 @@ try
             setcoh = perm(3);
             contrast = perm(4)/100;
             setpachdiam = perm(5);
-            setstepsize = setspeed*0.25;
+            setstepsize = setspeed*0;
             targets = setNumTargets(1);
             targets = newTargets(screenInfo,targets,[1],[0],[0],...
                 [4],[255,0,0]);
