@@ -159,7 +159,7 @@ ndots = min(dotInfo.maxDotsPerFrame, ...
 for df = 1 : dotInfo.numDotField
     % dxdy is an N x 2 matrix that gives jumpsize in units on 0..1
     %   deg/sec * ap-unit/deg * sec/jump = ap-unit/jump
-    dxdy{df} = repmat((dotInfo.speed(df)/10) * (10/apD(df)) * ...
+    dxdy{df} = repmat((dotInfo.speed(df)) * (10/apD(df)) * ...
         (3/screenInfo.monRefresh) * [cos(pi*dotInfo.dir(df)/180.0), ...
         -sin(pi*dotInfo.dir(df)/180.0)], ndots(df),1);    
     ss{df} = rand(ndots(df)*3, 2); % array of dot positions raw [x,y]
@@ -167,6 +167,21 @@ for df = 1 : dotInfo.numDotField
     Ls{df} = cumsum(ones(ndots(df),3)) + repmat([0 ndots(df) ndots(df)*2], ... 
         ndots(df), 1);
     loopi(df) = 1; % loops through the three sets of dots
+end
+
+if ~isempty(dotInfo.changetime)
+for df = 1 : dotInfo.numDotField
+    % dxdy is an N x 2 matrix that gives jumpsize in units on 0..1
+    %   deg/sec * ap-unit/deg * sec/jump = ap-unit/jump
+    dxdyc{df} = repmat(0 * (10/apD(df)) * ...
+        (3/screenInfo.monRefresh) * [cos(pi*dotInfo.dir(df)/180.0), ...
+        -sin(pi*dotInfo.dir(df)/180.0)], ndots(df),1);     
+    ss{df} = rand(ndots(df)*3, 2); % array of dot positions raw [x,y]
+    % Divide dots into three sets
+    Ls{df} = cumsum(ones(ndots(df),3)) + repmat([0 ndots(df) ndots(df)*2], ... 
+        ndots(df), 1);
+    loopi(df) = 1; % loops through the three sets of dots
+end
 end
 
 % Loop length is determined by the field "dotInfo.maxDotTime". If none is given, 
@@ -201,7 +216,7 @@ Screen('DrawingFinished',curWindow,dontclear);
 % are replotted according to the speed/direction and coherence. Similarly, the 
 % same is done for the 2nd group, etc.
 t1 = GetSecs;
-if dotInfo.isMovingCenter && ~isempty(targets)
+if dotInfo.isMovingTarget && ~isempty(targets)
     TargetInitialPosition = targets.rects(2,[1,3]);
 end
 while continue_show
@@ -228,7 +243,11 @@ while continue_show
         % Compute new locations, how many dots move coherently
         L = rand(ndots(df),1) < coh(df);
         % Offset the selected dots
-        this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdy{df}(L,:));
+        if ~isempty(dotInfo.changetime) && (GetSecs - t1) > dotInfo.changetime
+            this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdyc{df}(L,:));
+        else
+            this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdy{df}(L,:));
+        end
         
         if sum(~L) > 0
             this_s{df}(~L,:) = rand(sum(~L),2);	% get new random locations for the rest
@@ -301,9 +320,9 @@ while continue_show
     % Draw targets
     
     for i = showtar
-        if dotInfo.isMovingCenter && size(targets.rects,1)>1  %changed
+        if dotInfo.isMovingTarget && size(targets.rects,1)>1  %changed
 %             targets.x(2) = targets.x(2) + dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd
-            targets.rects(2,[1,3]) = TargetInitialPosition + (GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd;
+            targets.rects(2,[1,3]) = TargetInitialPosition + (GetSecs-t1-dotInfo.initTime)*dotInfo.targetspeed*cos(dotInfo.targetdir)*screenInfo.ppd;
             Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
         else
             Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
