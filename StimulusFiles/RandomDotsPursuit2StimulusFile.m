@@ -322,11 +322,12 @@ try
                 FixationPositionX = 200;
             end
             targets = newTargets(screenInfo,targets,[1,2],[FixationPositionX,0],[0,0],...
-                [4,4],[255,0,0;255,255,255]);
+                [7,7],[255,0,0;255,0,0]);
             showTargets(screenInfo, targets, [2]);
             FixationTime_noDots = (FixationTimeMin_noDots + (FixationTimeMax_noDots-FixationTimeMin_noDots) * rand);
             pause(FixationTime_noDots/1000);
             dotInfo = createDotInfo(1);
+            dotInfo.maxDotsPerFrame = 50;
             dotInfo.numDotField = 1;
             dotInfo.apXYD = [0 0 setpachdiam*10];
             dotInfo.speed = [0];
@@ -338,7 +339,7 @@ try
             
             dotInfo.trialtype = [2 1];
             dotInfo.dotColor = floor([255 255 255] * contrast); % default white dots
-            dotInfo.dotSize = 2;
+            dotInfo.dotSize = 4;
             dotInfo.isMovingTarget = false;
             dotInfo.changetime = [];
             
@@ -360,7 +361,7 @@ try
             dotInfo.changetime = perm(8)/1000;
             %  Eyelink('Message', 'SYNCTIME');
             targets = newTargets(screenInfo,targets,[1,2],[FixationPositionX,-cos(setdir_target)*setstepsize*10],[0,0],...
-                [4,4],[255,0,0;255,255,255]);
+                [7,7],[255,0,0;255,0,0]);
             
             [frames, rseed, start_time, end_time, response, response_time] = ...
                 dotsX(screenInfo, dotInfo,targets);
