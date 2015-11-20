@@ -19,7 +19,7 @@ type = S.type;
 NumConditions = S.NumConditions;
 conditions = S.conditions;
 
-trials = nan(8,NumConditions*NumTrials);
+trials = nan(9,NumConditions*NumTrials);
 for condcount = 1:NumConditions
     trials(:,((condcount-1)*NumTrials + 1):condcount*NumTrials) = repmat(conditions(:,condcount),1,NumTrials);
 end
@@ -87,26 +87,26 @@ try
     % in a structure that also contains useful defaults
     % and control codes (e.g. tracker state bit and Eyelink key values).
     
-%         el=EyelinkInitDefaults(window);
+        el=EyelinkInitDefaults(window);
         
         % We are changing calibration to match task background and target
         % this eliminates affects of changes in luminosity between screens
         % no sound and smaller targets
-%         el.targetbeep = 0;
+        el.targetbeep = 0;
         
-%         el.backgroundcolour = BlackIndex(el.window);
-%         el.backgroundcolour = Index(window);
-%         el.calibrationtargetcolour= [255 0 0];
+        el.backgroundcolour = BlackIndex(el.window);
+        
+        el.calibrationtargetcolour= [255 0 0];
         % for lower resolutions you might have to play around with these values
         % a little. If you would like to draw larger targets on lower res
         % settings please edit PsychEyelinkDispatchCallback.m and see comments
         % in the EyelinkDrawCalibrationTarget function
-%         el.calibrationtargetsize= 1;
-%         el.calibrationtargetwidth=0.5;
+        el.calibrationtargetsize= 1;
+        el.calibrationtargetwidth=0.5;
         % call this function for changes to the el calibration structure to take
         % affect
         
-%         EyelinkUpdateDefaults(el);
+        EyelinkUpdateDefaults(el);
 
 
     
@@ -117,26 +117,26 @@ try
     % Initialization of the connection with the Eyelink tracker
     % exit program if this fails.
     
-%     if ~EyelinkInit(dummymode)
-%         fprintf('Eyelink Init aborted.\n');
-%         cleanup;  % cleanup function
-%         return;
-%     end
+    if ~EyelinkInit(dummymode)
+        fprintf('Eyelink Init aborted.\n');
+        cleanup;  % cleanup function
+        return;
+    end
     
     % open file to record data to
-%     res = Eyelink('Openfile', edfFile);
+    res = Eyelink('Openfile', edfFile);
     
-%     if res~=0
-%         fprintf('Cannot create EDF file ''%s'' ', edffilename);
-%         cleanup;
-%         return;
-%     end
+    if res~=0
+        fprintf('Cannot create EDF file ''%s'' ', edffilename);
+        cleanup;
+        return;
+    end
     
     % make sure we're still connected.
-%     if Eyelink('IsConnected')~=1 && ~dummymode
-%         cleanup;
-%         return;
-%     end
+    if Eyelink('IsConnected')~=1 && ~dummymode
+        cleanup;
+        return;
+    end
     
     %%%%%%%%%%
     % STEP 5 %
@@ -144,7 +144,7 @@ try
     
     % SET UP TRACKER CONFIGURATION
     
-%     Eyelink('command', 'add_file_preamble_text ''Recorded by EyelinkToolbox demo-experiment''');
+    Eyelink('command', 'add_file_preamble_text ''Recorded by EyelinkToolbox demo-experiment''');
     % Setting the proper recording resolution, proper calibration type,
     % as well as the data file content;
     
@@ -152,38 +152,38 @@ try
     % screen pixel positions to determine fixation
 %     Eyelink('command','screen_phys_coords = %ld %ld %ld %ld', -160, 160, 160, -160);
 %     Eyelink('command','screen_distance = %ld %ld %ld %ld', -160, 160, 160, -160);
-%     Eyelink('command','screen_pixel_coords = %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
-%     Eyelink('message', 'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
+    Eyelink('command','screen_pixel_coords = %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
+    Eyelink('message', 'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
     % set calibration type.
-%     Eyelink('command', 'calibration_type = HV9');
-%     Eyelink('command', 'generate_default_targets = YES');
+    Eyelink('command', 'calibration_type = HV9');
+    Eyelink('command', 'generate_default_targets = YES');
     
     % STEP 5.1 retrieve tracker version and tracker software version
-%     [v,vs] = Eyelink('GetTrackerVersion');
-%     fprintf('Running experiment on a ''%s'' tracker.\n', vs );
-%     vsn = regexp(vs,'\d','match');
+    [v,vs] = Eyelink('GetTrackerVersion');
+    fprintf('Running experiment on a ''%s'' tracker.\n', vs );
+    vsn = regexp(vs,'\d','match');
     
-%     if v == 3 && str2double(vsn{1}) == 4 % if EL 1000 and tracker version 4.xx
-%         
-%        % remote mode possible add HTARGET ( head target)
-%         Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
-%         Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT,HTARGET');
-%         % set link data (used for gaze cursor)
-%         Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
-%         Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT,HTARGET');
-%     else
-%         Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
-%         Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT');
-%         % set link data (used for gaze cursor)
-%         Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
-%         Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT');
-%     end
+    if v == 3 && str2double(vsn{1}) == 4 % if EL 1000 and tracker version 4.xx
+        
+       % remote mode possible add HTARGET ( head target)
+        Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
+        Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT,HTARGET');
+        % set link data (used for gaze cursor)
+        Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
+        Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT,HTARGET');
+    else
+        Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
+        Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT');
+        % set link data (used for gaze cursor)
+        Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
+        Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT');
+    end
     
     % allow to use the big button on the eyelink gamepad to accept the
     % calibration/drift correction target
-%     Eyelink('command', 'button_function 5 "accept_target_fixation"');
-%     Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
-%     Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
+    Eyelink('command', 'button_function 5 "accept_target_fixation"');
+    Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
+    Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
  
        
     %%%%%%%%%%
@@ -193,7 +193,7 @@ try
     % Hide the mouse cursor
 %     Screen('HideCursorHelper', window);
     % enter Eyetracker camera setup mode, calibration and validation
-%     EyelinkDoTrackerSetup(el);
+    EyelinkDoTrackerSetup(el);
     
     %%%%%%%%%%
     % STEP 7 %
@@ -242,9 +242,9 @@ try
 
         % Before recording, we place reference graphics on the host display
         % Must be in offline mode to transfer image to Host PC
-%         Eyelink('Command', 'set_idle_mode');
+        Eyelink('Command', 'set_idle_mode');
         % clear tracker display and draw box at center
-%         Eyelink('Command', 'clear_screen %d', 0);
+        Eyelink('Command', 'clear_screen %d', 0);
         
         % calculate locations of target peripheries so that we can draw
         % matching lines and boxes on host pc
@@ -287,22 +287,22 @@ try
         % we change the location of the drift correction to match that of
         % the target start position
         % Note drift correction does not accept fractionals in PTB!
-%         EyelinkDoDriftCorrection(el);%,round(x),round(y));
+        EyelinkDoDriftCorrection(el);%,round(x),round(y));
         
         % STEP 7.3
         % start recording eye position (preceded by a short pause so that
         % the tracker can finish the mode transition)
         % The paramerters for the 'StartRecording' call controls the
         % file_samples, file_events, link_samples, link_events availability
-%         Eyelink('Command', 'set_idle_mode');
-%         WaitSecs(0.05);
-%         Eyelink('StartRecording');
+        Eyelink('Command', 'set_idle_mode');
+        WaitSecs(0.05);
+        Eyelink('StartRecording');
         % record a few samples before we actually start displaying
         % otherwise you may lose a few msec of data
-%         WaitSecs(0.1);
+        WaitSecs(0.1);
         
         % get eye that's tracked
-%         eye_used = Eyelink('EyeAvailable');
+        eye_used = Eyelink('EyeAvailable');
         
 %         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
 %         while GetSecs < fixationTime
@@ -313,7 +313,7 @@ try
             setcoh = perm(5);
             contrast = perm(6)/100;
             setpachdiam = perm(7);
-            setstepsize = setspeed_target*.2;
+            
             targets = setNumTargets(1);
             targets.show = 2;
             if cos(setdir_target) > 0
@@ -321,36 +321,39 @@ try
             else
                 FixationPositionX = 200;
             end
-            targets = newTargets(screenInfo,targets,[1,2],[FixationPositionX,0],[0,0],...
-                [7,7],[255,0,0;255,0,0]);
+            targets = newTargets(screenInfo,targets,[1,2],[0,0],[0,0],...
+                [7,7],[128,0,0;128,0,0]);
             showTargets(screenInfo, targets, [2]);
             FixationTime_noDots = (FixationTimeMin_noDots + (FixationTimeMax_noDots-FixationTimeMin_noDots) * rand);
             pause(FixationTime_noDots/1000);
             dotInfo = createDotInfo(1);
-            dotInfo.maxDotsPerFrame = 50;
+            dotInfo.setstepsize = 3;
+            dotInfo.maxDotsPerFrame = perm(9);
             dotInfo.numDotField = 1;
             dotInfo.apXYD = [0 0 setpachdiam*10];
             dotInfo.speed = [0];
             dotInfo.targetspeed = [0];
-            dotInfo.cohSet = [0];
+            dotInfo.cohSet = [0/100];
+            dotInfo.coh = [0*10;0*10];
             dotInfo.dir = [setdir_dots];
             FixationTime_withDots = (FixationTimeMin_withDots + (FixationTimeMax_withDots-FixationTimeMin_withDots) * rand);
             dotInfo.maxDotTime = [FixationTime_withDots/1000];
             
             dotInfo.trialtype = [2 1];
             dotInfo.dotColor = floor([255 255 255] * contrast); % default white dots
-            dotInfo.dotSize = 4;
+            dotInfo.dotSize = 2;
             dotInfo.isMovingTarget = false;
             dotInfo.changetime = [];
             
             
-            [frames, rseed, start_time, end_time, response, response_time] = ...
-                dotsX(screenInfo, dotInfo,targets);
-
-            dotInfo.initTime = InitialTime/1000;
+%             [frames, rseed, start_time, end_time, response, response_time] = ...
+%                 dotsX(screenInfo, dotInfo,targets);
+            
+            dotInfo.initTime = FixationTime_withDots/1000;
             dotInfo.speed = [setspeed_dots];
             dotInfo.targetspeed = [setspeed_target];
             dotInfo.cohSet = [setcoh/100];
+            dotInfo.coh = [setcoh*10;setcoh*10];
             dotInfo.dir = [setdir_dots];
             dotInfo.targetdir = [setdir_target];
             dotInfo.maxDotTime = [TRIAL_TIMER/1000];
@@ -358,11 +361,11 @@ try
             dotInfo.trialtype = [2, 1];
             dotInfo.isMovingCenter = false;
             dotInfo.isMovingTarget = true;
-            dotInfo.changetime = perm(8)/1000;
-            %  Eyelink('Message', 'SYNCTIME');
-            targets = newTargets(screenInfo,targets,[1,2],[FixationPositionX,-cos(setdir_target)*setstepsize*10],[0,0],...
-                [7,7],[255,0,0;255,0,0]);
-            
+            dotInfo.changetime = [FixationTime_withDots/1000,FixationTime_withDots/1000 + perm(8)/1000];
+%              Eyelink('Message', 'SYNCTIME');
+            targets = newTargets(screenInfo,targets,[1,2],[0,0],[0,0],...
+                [7,7],[128,0,0;128,0,0]);
+            screenInfo.rseed = [];
             [frames, rseed, start_time, end_time, response, response_time] = ...
                 dotsX(screenInfo, dotInfo,targets);
             
@@ -433,7 +436,7 @@ try
 %         
 %         end
         WaitSecs(0.1);
-%         Eyelink('StopRecording');
+        Eyelink('StopRecording');
     end
     
     
@@ -444,22 +447,22 @@ try
     
     % End of Experiment; close the file first
     % close graphics window, close data file and shut down tracker
-%     Eyelink('Command', 'set_idle_mode');
-%     WaitSecs(0.5);
-%     Eyelink('CloseFile');
+    Eyelink('Command', 'set_idle_mode');
+    WaitSecs(0.5);
+    Eyelink('CloseFile');
     
-%     try
-%         fprintf('Receiving data file ''%s''\n', edfFile );
-%         status=Eyelink('ReceiveFile');
-%         if status > 0
-%             fprintf('ReceiveFile status %d\n', status);
-%         end
-%         if 2==exist(edfFile, 'file')
-%             fprintf('Data file ''%s'' can be found in ''%s''\n', edfFile, pwd );
-%         end
-%     catch %#ok<*CTCH>
-%         fprintf('Problem receiving data file ''%s''\n', edfFile );
-%     end
+    try
+        fprintf('Receiving data file ''%s''\n', edfFile );
+        status=Eyelink('ReceiveFile');
+        if status > 0
+            fprintf('ReceiveFile status %d\n', status);
+        end
+        if 2==exist(edfFile, 'file')
+            fprintf('Data file ''%s'' can be found in ''%s''\n', edfFile, pwd );
+        end
+    catch %#ok<*CTCH>
+        fprintf('Problem receiving data file ''%s''\n', edfFile );
+    end
     
     %%%%%%%%%%
     % STEP 9 %

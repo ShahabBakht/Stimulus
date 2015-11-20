@@ -127,7 +127,7 @@ else
 end
 
 % Create the aperture square
-%apRect = floor(createTRect(dotInfo.apXYD, screenInfo));
+apRect = floor(createTRect(dotInfo.apXYD, screenInfo));
 
 % Variables sent to rex have been multiplied by a factor of 10 to make sure 
 % they are integers. Now convert them back so that they are correct for plotting.
@@ -151,8 +151,9 @@ dotSize = dotInfo.dotSize; % probably better to leave this in pixels, but not su
 % video frame (dotInfo.maxDotsPerFrame). maxDotsPerFrame was originally in 
 % setupScreen as a field in screenInfo, but makes more sense in createDotInfo as 
 % a field in dotInfo.
-ndots = min(dotInfo.maxDotsPerFrame, ...
-    ceil(16.7 * apD .* apD * 0.01 / screenInfo.monRefresh));
+% ndots = min(dotInfo.maxDotsPerFrame, ...
+%     ceil(16.7 * apD .* apD * 0.01 / screenInfo.monRefresh));
+ndots = dotInfo.maxDotsPerFrame;
 
 % Don't worry about pre-allocating, the number of dot fields should never be 
 % large enough to cause memory problems.
@@ -216,6 +217,7 @@ Screen('DrawingFinished',curWindow,dontclear);
 % are replotted according to the speed/direction and coherence. Similarly, the 
 % same is done for the 2nd group, etc.
 t1 = GetSecs;
+syncflag = true;
 if dotInfo.isMovingTarget && ~isempty(targets)
     TargetInitialPosition = targets.rects(2,[1,3]);
 end
@@ -242,8 +244,9 @@ while continue_show
         
         % Compute new locations, how many dots move coherently
         L = rand(ndots(df),1) < coh(df);
+        
         % Offset the selected dots
-        if ~isempty(dotInfo.changetime) && (GetSecs - t1) > dotInfo.changetime
+        if ~isempty(dotInfo.changetime) && ((GetSecs - t1) > dotInfo.changetime(2) || (GetSecs - t1) < dotInfo.changetime(1))
             this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdyc{df}(L,:));
         else
             this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdy{df}(L,:));
@@ -280,20 +283,25 @@ while continue_show
     
     % After all computations, flip to draws dots from the previous loop. For the
     % first time, this doesn't draw anything.
+    if (GetSecs - t1) > dotInfo.initTime && syncflag
+        Eyelink('Message', 'SYNCTIME');
+        syncflag = false;
+    end
     Screen('Flip', curWindow,0,dontclear);
-
+    Screen('BlendFunction', curWindow, GL_ONE, GL_ZERO);
     %{
-    % Setup the mask to see only a circular aperture although dots are moving in 
-    % a square aperture. Minimizes the edge effects.
+    Setup the mask to see only a circular aperture although dots are moving in 
+    a square aperture. Minimizes the edge effects.
     Screen('BlendFunction', curWindow, GL_ONE, GL_ZERO);
 
-    % Want targets to still show up
+    Want targets to still show up
     Screen('FillRect', curWindow, [0 0 0 255]);
     
+    
     for df = 1 : dotInfo.numDotField
-        % Square that dots do not show up in
+        Square that dots do not show up in
         Screen('FillRect', curWindow, [0 0 0 0], apRect(df,:));
-        % Circle that dots do show up in
+        Circle that dots do show up in
         Screen('FillOval', curWindow, [0 0 0 255], apRect(df,:));
     end
     
@@ -320,9 +328,10 @@ while continue_show
     % Draw targets
     
     for i = showtar
-        if dotInfo.isMovingTarget && size(targets.rects,1)>1  %changed
+        if dotInfo.isMovingTarget && size(targets.rects,1)>1 && (GetSecs - t1)>dotInfo.initTime %changed
 %             targets.x(2) = targets.x(2) + dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd
-            targets.rects(2,[1,3]) = TargetInitialPosition + (GetSecs-t1-dotInfo.initTime)*dotInfo.targetspeed*cos(dotInfo.targetdir)*screenInfo.ppd;
+            targets.rects(2,[1,3]) = TargetInitialPosition - cos(dotInfo.targetdir)*dotInfo.setstepsize*10 + (GetSecs-t1-dotInfo.initTime)*dotInfo.targetspeed*cos(dotInfo.targetdir)*screenInfo.ppd;
+%             %
             Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
         else
             Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
