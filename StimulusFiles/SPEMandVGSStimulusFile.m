@@ -9,6 +9,8 @@ FixationTimeMax =   S.FixationTimeMax;
 GapTime         =   S.GapTime;
 TRIAL_TIMER     =   S.TRIAL_TIMER;       % (ms)
 SaveFolder      =   S.SaveFolder;
+SPEMstep        =   S.SPEMstep;          % (degrees)
+TargetSize      =   S.TargetSize;        % (degrees)
 
 type = S.type;
 NumConditions = S.NumConditions;
@@ -30,7 +32,7 @@ end
 
 S.trials = trials;
 S.blocks = blocks;
-
+S.blocktrials = blocktrials;
 
 %%
 
@@ -91,26 +93,24 @@ try
     % in a structure that also contains useful defaults
     % and control codes (e.g. tracker state bit and Eyelink key values).
     
-%         el=EyelinkInitDefaults(window);
+        el=EyelinkInitDefaults(window);
         
         % We are changing calibration to match task background and target
         % this eliminates affects of changes in luminosity between screens
         % no sound and smaller targets
-%         el.targetbeep = 0;
-%         el.backgroundcolour = BlackIndex(el.window);
-backgroundcolour = BlackIndex(window);
-%         el.backgroundcolour = Index(window);
-%         el.calibrationtargetcolour= [255 255 255];
+        el.targetbeep = 0;
+        el.backgroundcolour = BlackIndex(el.window);
+        el.calibrationtargetcolour= [255 255 255];
         % for lower resolutions you might have to play around with these values
         % a little. If you would like to draw larger targets on lower res
         % settings please edit PsychEyelinkDispatchCallback.m and see comments
         % in the EyelinkDrawCalibrationTarget function
-%         el.calibrationtargetsize= 1;
-%         el.calibrationtargetwidth=0.5;
+        el.calibrationtargetsize= 1;
+        el.calibrationtargetwidth=0.5;
         % call this function for changes to the el calibration structure to take
         % affect
         
-%         EyelinkUpdateDefaults(el);
+        EyelinkUpdateDefaults(el);
 
 
     
@@ -121,26 +121,26 @@ backgroundcolour = BlackIndex(window);
     % Initialization of the connection with the Eyelink tracker
     % exit program if this fails.
     
-%     if ~EyelinkInit(dummymode)
-%         fprintf('Eyelink Init aborted.\n');
-%         cleanup;  % cleanup function
-%         return;
-%     end
+    if ~EyelinkInit(dummymode)
+        fprintf('Eyelink Init aborted.\n');
+        cleanup;  % cleanup function
+        return;
+    end
     
     % open file to record data to
-%     res = Eyelink('Openfile', edfFile);
-%     
-%     if res~=0
-%         fprintf('Cannot create EDF file ''%s'' ', edffilename);
-%         cleanup;
-%         return;
-%     end
+    res = Eyelink('Openfile', edfFile);
+    
+    if res~=0
+        fprintf('Cannot create EDF file ''%s'' ', edffilename);
+        cleanup;
+        return;
+    end
     
     % make sure we're still connected.
-%     if Eyelink('IsConnected')~=1 && ~dummymode
-%         cleanup;
-%         return;
-%     end
+    if Eyelink('IsConnected')~=1 && ~dummymode
+        cleanup;
+        return;
+    end
     
     %%%%%%%%%%
     % STEP 5 %
@@ -148,44 +148,44 @@ backgroundcolour = BlackIndex(window);
     
     % SET UP TRACKER CONFIGURATION
     
-%     Eyelink('command', 'add_file_preamble_text ''Recorded by EyelinkToolbox demo-experiment''');
+    Eyelink('command', 'add_file_preamble_text ''Recorded by EyelinkToolbox demo-experiment''');
     % Setting the proper recording resolution, proper calibration type,
     % as well as the data file content;
     
     % This command is crucial to map the gaze positions from the tracker to
     % screen pixel positions to determine fixation
-%     Eyelink('command','screen_pixel_coords = %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
-%     Eyelink('message', 'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
+    Eyelink('command','screen_pixel_coords = %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
+    Eyelink('message', 'DISPLAY_COORDS %ld %ld %ld %ld', 0, 0, winWidth-1, winHeight-1);
     % set calibration type.
-%     Eyelink('command', 'calibration_type = HV9');
-%     Eyelink('command', 'generate_default_targets = YES');
+    Eyelink('command', 'calibration_type = HV9');
+    Eyelink('command', 'generate_default_targets = YES');
     
     % STEP 5.1 retrieve tracker version and tracker software version
-%     [v,vs] = Eyelink('GetTrackerVersion');
-%     fprintf('Running experiment on a ''%s'' tracker.\n', vs );
-%     vsn = regexp(vs,'\d','match');
+    [v,vs] = Eyelink('GetTrackerVersion');
+    fprintf('Running experiment on a ''%s'' tracker.\n', vs );
+    vsn = regexp(vs,'\d','match');
     
-%     if v == 3 && str2double(vsn{1}) == 4 % if EL 1000 and tracker version 4.xx
-%         
-%        % remote mode possible add HTARGET ( head target)
-%         Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
-%         Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT,HTARGET');
-%         % set link data (used for gaze cursor)
-%         Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
-%         Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT,HTARGET');
-%     else
-%         Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
-%         Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT');
-%         % set link data (used for gaze cursor)
-%         Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
-%         Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT');
-%     end
-%     
+    if v == 3 && str2double(vsn{1}) == 4 % if EL 1000 and tracker version 4.xx
+        
+       % remote mode possible add HTARGET ( head target)
+        Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
+        Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT,HTARGET');
+        % set link data (used for gaze cursor)
+        Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
+        Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT,HTARGET');
+    else
+        Eyelink('command', 'file_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,INPUT');
+        Eyelink('command', 'file_sample_data  = LEFT,RIGHT,GAZE,HREF,AREA,GAZERES,STATUS,INPUT');
+        % set link data (used for gaze cursor)
+        Eyelink('command', 'link_event_filter = LEFT,RIGHT,FIXATION,SACCADE,BLINK,MESSAGE,BUTTON,FIXUPDATE,INPUT');
+        Eyelink('command', 'link_sample_data  = LEFT,RIGHT,GAZE,GAZERES,AREA,STATUS,INPUT');
+    end
+    
     % allow to use the big button on the eyelink gamepad to accept the
     % calibration/drift correction target
-%     Eyelink('command', 'button_function 5 "accept_target_fixation"');
-%     Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
-%     Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
+    Eyelink('command', 'button_function 5 "accept_target_fixation"');
+    Eyelink('command', ['calibration_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]); % Eyelink('command', 'calibration_area_proportion horizontal vertical');
+    Eyelink('command', ['validation_area_proportion ' num2str(S.ScreenCov_h) ' ' num2str(S.ScreenCov_v)]);
        
     %%%%%%%%%%
     % STEP 6 %
@@ -194,7 +194,7 @@ backgroundcolour = BlackIndex(window);
     % Hide the mouse cursor
     Screen('HideCursorHelper', window);
     % enter Eyetracker camera setup mode, calibration and validation
-%     EyelinkDoTrackerSetup(el);
+    EyelinkDoTrackerSetup(el);
     
     %%%%%%%%%%
     % STEP 7 %
@@ -220,10 +220,12 @@ backgroundcolour = BlackIndex(window);
 
     InBlockNumIterations = NumTrials * NumConditions;
     OutBlockNumIterations = NumBlocksRepeatition * NumBlockTypes;
-
+    ClockNow = nan(OutBlockNumIterations * InBlockNumIterations,3,6);
+    counterforclock = 0;
 for j = 1: (OutBlockNumIterations)
     permb = blocktrials(:,blocksorder(j));
-    
+            EyelinkDoDriftCorrection(el);%,round(x),round(y));
+
     switch permb(1)
         case 1
             ThisBlockType = 'spem';
@@ -233,7 +235,7 @@ for j = 1: (OutBlockNumIterations)
             
     if strcmp(ThisBlockType,'spem')
         for i = 1 : (InBlockNumIterations)
-        
+        counterforclock = counterforclock + 1;
         [keyPress, keyTime, keyID] = KbCheck(-1);
         if any(keyID-oldKeyID)
             keyPressID = keyID;
@@ -255,9 +257,9 @@ for j = 1: (OutBlockNumIterations)
 
         % Before recording, we place reference graphics on the host display
         % Must be in offline mode to transfer image to Host PC
-%         Eyelink('Command', 'set_idle_mode');
+        Eyelink('Command', 'set_idle_mode');
         % clear tracker display and draw box at center
-%         Eyelink('Command', 'clear_screen %d', 0);
+        Eyelink('Command', 'clear_screen %d', 0);
         
         % calculate locations of target peripheries so that we can draw
         % matching lines and boxes on host pc
@@ -272,7 +274,7 @@ for j = 1: (OutBlockNumIterations)
         amplitude = perm(3);
         velocityX = velocity * cos(Angle);
         velocityY = velocity * sin(Angle);
-        StepAmplitude = 0.15*velocity* (PPD_X^2 + PPD_Y^2)^0.5;
+        StepAmplitude = SPEMstep * (PPD_X^2 + PPD_Y^2)^0.5;
         sine_plot_x = sine_plot_x - StepAmplitude*cos(Angle);
         sine_plot_y = sine_plot_y - StepAmplitude*sin(Angle);
 
@@ -287,8 +289,9 @@ for j = 1: (OutBlockNumIterations)
 
         
         %%
-        ball([1 3]) = [x-10 x+10];
-        ball([2 4]) =  [y-10 y+10];
+        R = floor((TargetSize/2) * (PPD_X^2 + PPD_Y^2)^0.5);
+        ball([1 3]) = [x-R x+R];
+        ball([2 4]) =  [y-R y+R];
         
         
         WaitSecs(0.1);
@@ -307,22 +310,24 @@ for j = 1: (OutBlockNumIterations)
         % the tracker can finish the mode transition)
         % The paramerters for the 'StartRecording' call controls the
         % file_samples, file_events, link_samples, link_events availability
-%         Eyelink('Command', 'set_idle_mode');
-%         WaitSecs(0.05);
-%         Eyelink('StartRecording');
+        Eyelink('Command', 'set_idle_mode');
+        WaitSecs(0.05);
+        Eyelink('StartRecording');
+        
         % record a few samples before we actually start displaying
         % otherwise you may lose a few msec of data
-%         WaitSecs(0.1);
+        WaitSecs(0.1);
         
         % get eye that's tracked
-%         eye_used = Eyelink('EyeAvailable');
+        eye_used = Eyelink('EyeAvailable');
         
         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
+        ClockNow(counterforclock,1,:) = clock;
         while GetSecs < fixationTime
         
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window, backgroundcolour);
-            Screen('FillOval', window,[255 0 0], [(dots(1,1) - 10), (dots(2,1) - 10), (dots(1,1) + 10), (dots(2,1) + 10)]);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window, backgroundcolour);
+            Screen('FillOval', window,[255 0 0], [(dots(1,1) - R), (dots(2,1) - R), (dots(1,1) + R), (dots(2,1) + R)]);
             Screen('Flip', window);
         
         end
@@ -330,6 +335,7 @@ for j = 1: (OutBlockNumIterations)
         trialTime = GetSecs + TRIAL_TIMER/1000;
         sttime = GetSecs;
         resetInit = true;
+        ClockNow(counterforclock,2,:) = clock;
         while GetSecs < trialTime
             
             % STEP 7.4
@@ -337,11 +343,12 @@ for j = 1: (OutBlockNumIterations)
             % Enable alpha blending with proper blend-function. We need it
             % for drawing of smoothed points:
             Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window, backgroundcolour);
             Screen('FillOval', window,[255 0 0], ball);
             Screen('Flip', window);
-%             Eyelink('Message', 'SYNCTIME');
+            
+            Eyelink('Message', 'SYNCTIME');
 
             t = GetSecs - sttime;
             x = sine_plot_x + (velocityX * t) * PPD_X;
@@ -358,16 +365,16 @@ for j = 1: (OutBlockNumIterations)
             end
  
             
-            ball([1 3]) = [x-10 x+10];
-            ball([2 4]) = [y-10 y+10];
+            ball([1 3]) = [x-R x+R];
+            ball([2 4]) = [y-R y+R];
         end
         
         fixationTime = GetSecs + (GapTime/1000);
         while GetSecs < fixationTime
         
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window, backgroundcolour);
-            Screen('FillOval', window,[255 0 0], [(x - 10), (y - 10), (x + 10), (y + 10)]);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window, backgroundcolour);
+            Screen('FillOval', window,[255 0 0], [(x - R), (y - R), (x + R), (y + R)]);
             Screen('Flip', window);
         
         end
@@ -375,17 +382,18 @@ for j = 1: (OutBlockNumIterations)
         % STEP 7.6
         % add 100 msec of data to catch final events and blank display
         WaitSecs(0.1);
-%         Eyelink('StopRecording');
-%         Screen('FillRect', window, el.backgroundcolour);
-        Screen('FillRect', window, backgroundcolour);
+        ClockNow(counterforclock,3,:) = clock;
+        Eyelink('StopRecording');
+        Screen('FillRect', window, el.backgroundcolour);
+%         Screen('FillRect', window, backgroundcolour);
         Screen('Flip', window);
 
       
         gapTime = GetSecs + GapTime/1000;
         while GetSecs < gapTime
         
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window, backgroundcolour);
             Screen('Flip', window);
         
         end
@@ -393,7 +401,7 @@ for j = 1: (OutBlockNumIterations)
         
     elseif strcmp(ThisBlockType,'vgs')
         for i = 1 : (InBlockNumIterations)
-        
+        counterforclock = counterforclock + 1;
         [keyPress, keyTime, keyID] = KbCheck(-1);
         if any(keyID-oldKeyID)
             keyPressID = keyID;
@@ -415,9 +423,9 @@ for j = 1: (OutBlockNumIterations)
 
         % Before recording, we place reference graphics on the host display
         % Must be in offline mode to transfer image to Host PC
-%         Eyelink('Command', 'set_idle_mode');
+        Eyelink('Command', 'set_idle_mode');
         % clear tracker display and draw box at center
-%         Eyelink('Command', 'clear_screen %d', 0);
+        Eyelink('Command', 'clear_screen %d', 0);
         
         % calculate locations of target peripheries so that we can draw
         % matching lines and boxes on host pc
@@ -435,8 +443,9 @@ for j = 1: (OutBlockNumIterations)
         %%
         x = sine_plot_x;
         y = sine_plot_y;
-        ball([1 3]) = [x-10 x+10];
-        ball([2 4]) =  [y-10 y+10];
+        R = floor((TargetSize/2) * (PPD_X^2 + PPD_Y^2)^0.5);
+        ball([1 3]) = [x-R x+R];
+        ball([2 4]) =  [y-R y+R];
         
         
         WaitSecs(0.1);
@@ -455,22 +464,24 @@ for j = 1: (OutBlockNumIterations)
         % the tracker can finish the mode transition)
         % The paramerters for the 'StartRecording' call controls the
         % file_samples, file_events, link_samples, link_events availability
-%         Eyelink('Command', 'set_idle_mode');
-%         WaitSecs(0.05);
-%         Eyelink('StartRecording');
+        Eyelink('Command', 'set_idle_mode');
+        WaitSecs(0.05);
+        Eyelink('StartRecording');
+        
         % record a few samples before we actually start displaying
         % otherwise you may lose a few msec of data
-%         WaitSecs(0.1);
+        WaitSecs(0.1);
         
         % get eye that's tracked
-%         eye_used = Eyelink('EyeAvailable');
+        eye_used = Eyelink('EyeAvailable');
         
         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
+        ClockNow(counterforclock,1,:) = clock;
         while GetSecs < fixationTime
         
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window,backgroundcolour);
-            Screen('FillOval', window,[0 255 0], [(dots(1,1) - 10), (dots(2,1) - 10), (dots(1,1) + 10), (dots(2,1) + 10)]);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window,backgroundcolour);
+            Screen('FillOval', window,[0 255 0], [(dots(1,1) - R), (dots(2,1) - R), (dots(1,1) + R), (dots(2,1) + R)]);
             Screen('Flip', window);
         
         end
@@ -478,6 +489,7 @@ for j = 1: (OutBlockNumIterations)
         trialTime = GetSecs + GapTime/1000;
         sttime = GetSecs;
         resetInit = true;
+        ClockNow(counterforclock,2,:) = clock;
         while GetSecs < trialTime
             
             % STEP 7.4
@@ -485,17 +497,18 @@ for j = 1: (OutBlockNumIterations)
             % Enable alpha blending with proper blend-function. We need it
             % for drawing of smoothed points:
             Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window, backgroundcolour);
             Screen('FillOval', window,[0 255 0], ball);
             Screen('Flip', window);
-%             Eyelink('Message', 'SYNCTIME');
+            
+            Eyelink('Message', 'SYNCTIME');
 
             x = Xc;
             y = Yc;
                     
-            ball([1 3]) = [x-10 x+10];
-            ball([2 4]) = [y-10 y+10];
+            ball([1 3]) = [x-R x+R];
+            ball([2 4]) = [y-R y+R];
         end
         
 %         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
@@ -509,18 +522,19 @@ for j = 1: (OutBlockNumIterations)
         
         % STEP 7.6
         % add 100 msec of data to catch final events and blank display
-%         WaitSecs(0.1);
-%         Eyelink('StopRecording');
-%         Screen('FillRect', window, el.backgroundcolour);
-        Screen('FillRect', window, backgroundcolour);
+        WaitSecs(0.1);
+        ClockNow(counterforclock,3,:) = clock;
+        Eyelink('StopRecording');
+        Screen('FillRect', window, el.backgroundcolour);
+%         Screen('FillRect', window, backgroundcolour);
         Screen('Flip', window);
 
       
         gapTime = GetSecs + GapTime/1000;
         while GetSecs < gapTime
         
-%             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillRect', window, backgroundcolour);
+            Screen('FillRect', window, el.backgroundcolour);
+%             Screen('FillRect', window, backgroundcolour);
             Screen('Flip', window);
         
         end
@@ -529,7 +543,7 @@ for j = 1: (OutBlockNumIterations)
     
 end
     
-    
+S.Clocks = ClockNow;    
     
         
     %%%%%%%%%%
@@ -538,9 +552,9 @@ end
     
     % End of Experiment; close the file first
     % close graphics window, close data file and shut down tracker
-%     Eyelink('Command', 'set_idle_mode');
-%     WaitSecs(0.5);
-%     Eyelink('CloseFile');
+    Eyelink('Command', 'set_idle_mode');
+    WaitSecs(0.5);
+    Eyelink('CloseFile');
     
     try
         fprintf('Receiving data file ''%s''\n', edfFile );

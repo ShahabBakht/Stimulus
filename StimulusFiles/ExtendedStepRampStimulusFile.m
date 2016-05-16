@@ -14,7 +14,7 @@ type            =   S.type;
 NumConditions   =   S.NumConditions;
 conditions      =   S.conditions;
 
-trials = nan(3,NumConditions*NumTrials);
+trials = nan(6,NumConditions*NumTrials);
 for condcount = 1:NumConditions
     trials(:,((condcount-1)*NumTrials + 1):condcount*NumTrials) = repmat(conditions(:,condcount),1,NumTrials);
 end
@@ -109,16 +109,20 @@ for i = 1 : (NumIterations)
     amplitude = perm(3) * 10;
     velocityX = velocity * cos(Angle);
     velocityY = velocity * sin(Angle);
+    XInitialPosition = perm(4) * 10;
+    YInitialPosition = perm(5) * 10;
+    Contrast = perm(6) / 100;
+    
     if velocityX > 0
-        FixationPositionX = -100;
+        FixationPositionX = 0;
     else
-        FixationPositionX = 100;
+        FixationPositionX = 0;
     end
     FixationPositionY = 0;
     
-    x = (velocityX * t);
+    x = (velocityX * t) + XInitialPosition;
 
-    y = (velocityY * t);
+    y = (velocityY * t) + YInitialPosition;
     
     if ((velocityX * t)^2 + (velocityY * t)^2) > amplitude^2
         StopFlag = true;
@@ -143,12 +147,12 @@ for i = 1 : (NumIterations)
     fixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
 
     targets = setNumTargets(2);
-    targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],[diameter,diameter],[0 0 255;255 0 0]);
-    showTargets(screenInfo, targets, [2]);
-    WaitSecs(fixationTime);
-    fixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
+    targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],[diameter,diameter/3],round([Contrast*[255 0 0];255 0 0]));
     showTargets(screenInfo, targets, [1,2]);
     WaitSecs(fixationTime);
+%     fixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
+%     showTargets(screenInfo, targets, [1,2]);
+%     WaitSecs(fixationTime);
 
     
     trialTime = GetSecs + TRIAL_TIMER/1000;
@@ -159,8 +163,8 @@ for i = 1 : (NumIterations)
         Eyelink('Message', 'SYNCTIME');
         
         t = GetSecs - sttime;
-        x = (velocityX * t);
-        y = (velocityY * t);
+        x = (velocityX * t) + XInitialPosition;
+        y = (velocityY * t) + YInitialPosition;
         
         if ((velocityX * t)^2 + (velocityY * t)^2) > amplitude^2
             StopFlag = true;
@@ -171,7 +175,7 @@ for i = 1 : (NumIterations)
         if StopFlag
             break
         end
-        targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],[diameter,diameter],[0 0 255;255 0 0]);
+        targets = newTargets(screenInfo,targets,[1,2],[x, FixationPositionX],[y, FixationPositionY],[diameter,diameter/3],round([Contrast*[255 0 0];255 0 0]));
         showTargets(screenInfo, targets, [1,2]);
         
         ball([1 3]) = [x-10 x+10];

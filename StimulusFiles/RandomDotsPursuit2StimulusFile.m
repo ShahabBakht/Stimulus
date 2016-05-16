@@ -14,12 +14,12 @@ InitialTime                 =   S.InitialTime;
 GapTime                     =   S.GapTime;
 TRIAL_TIMER                 =   S.TRIAL_TIMER;       % (ms)
 SaveFolder                  =   S.SaveFolder;
-
+fixWinSize                  =   S.fixWinSize;
 type = S.type;
 NumConditions = S.NumConditions;
 conditions = S.conditions;
 
-trials = nan(9,NumConditions*NumTrials);
+trials = nan(10,NumConditions*NumTrials);
 for condcount = 1:NumConditions
     trials(:,((condcount-1)*NumTrials + 1):condcount*NumTrials) = repmat(conditions(:,condcount),1,NumTrials);
 end
@@ -67,11 +67,13 @@ try
     % using the PsychToolbox's Screen function.
     screenInfo = openExperiment(90,57,0);
     window = screenInfo.curWindow;
+    wRect = screenInfo.screenRect;
 %     screenNumber=max(Screen('Screens'));
 %     [window, wRect]=Screen('OpenWindow', screenNumber, 0,[],32,2); %#ok<*NASGU>
     Screen(window,'BlendFunction',GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     [winWidth, winHeight] = WindowSize(window);
-    
+    fixationWindow = [-fixWinSize -fixWinSize fixWinSize fixWinSize];
+    fixationWindow = CenterRect(fixationWindow, wRect);
     % define sine function
 %     sine_plot_x = winWidth/2;
 %     sine_plot_y = winHeight/2;
@@ -307,12 +309,16 @@ try
 %         fixationTime = GetSecs + ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
 %         while GetSecs < fixationTime
             setdir_target = perm(1);
-            setspeed_target = perm(2);
+            setspeed_target = 15*rand + 5;%perm(2);
             setdir_dots = perm(3);
-            setspeed_dots = perm(4);
+            if perm(4) ~= 0
+                setspeed_dots = setspeed_target;%perm(4);
+            else
+                setspeed_dots = perm(4);
+            end
             setcoh = perm(5);
             contrast = perm(6)/100;
-            setpachdiam = perm(7);
+            setpachdiam = perm(7);%70;%perm(7);
             
             targets = setNumTargets(1);
             targets.show = 2;
@@ -321,30 +327,31 @@ try
             else
                 FixationPositionX = 200;
             end
-            targets = newTargets(screenInfo,targets,[1,2],[0,0],[0,0],...
-                [7,7],[128,0,0;128,0,0]);
-            showTargets(screenInfo, targets, [2]);
+            Tloc = perm(10);
+            targets = newTargets(screenInfo,targets,[1,2],[0,+Tloc * 10],[0,0],...
+                [3,9],[255,0,0;150,150,150]);
+            showTargets(screenInfo, targets, [1,2]);
             FixationTime_noDots = (FixationTimeMin_noDots + (FixationTimeMax_noDots-FixationTimeMin_noDots) * rand);
             pause(FixationTime_noDots/1000);
             dotInfo = createDotInfo(1);
-            dotInfo.setstepsize = 3;
+            dotInfo.setstepsize = 0;
             dotInfo.maxDotsPerFrame = perm(9);
             dotInfo.numDotField = 1;
             dotInfo.apXYD = [0 0 setpachdiam*10];
             dotInfo.speed = [0];
-            dotInfo.targetspeed = [0];
+            %dotInfo.targetspeed = [0];
             dotInfo.cohSet = [0/100];
             dotInfo.coh = [0*10;0*10];
             dotInfo.dir = [setdir_dots];
             FixationTime_withDots = (FixationTimeMin_withDots + (FixationTimeMax_withDots-FixationTimeMin_withDots) * rand);
             dotInfo.maxDotTime = [FixationTime_withDots/1000];
-            
+            dotInfo.eye_used = eye_used;
             dotInfo.trialtype = [2 1];
             dotInfo.dotColor = floor([255 255 255] * contrast); % default white dots
             dotInfo.dotSize = 2;
             dotInfo.isMovingTarget = false;
             dotInfo.changetime = [];
-            
+            dotInfo.fixationWindow = fixationWindow;
             
 %             [frames, rseed, start_time, end_time, response, response_time] = ...
 %                 dotsX(screenInfo, dotInfo,targets);
@@ -352,20 +359,24 @@ try
             dotInfo.initTime = FixationTime_withDots/1000;
             dotInfo.speed = [setspeed_dots];
             dotInfo.targetspeed = [setspeed_target];
+            TargetVelocity(i) = dotInfo.targetspeed;
             dotInfo.cohSet = [setcoh/100];
             dotInfo.coh = [setcoh*10;setcoh*10];
             dotInfo.dir = [setdir_dots];
-            dotInfo.targetdir = [setdir_target];
-            dotInfo.maxDotTime = [TRIAL_TIMER/1000];
-            dotInfo.apXYD = [0 0 setpachdiam*10];
+            dotInfo.targetdir = [setdir_target]*pi/180;
+            dotInfo.maxDotTime = [(TRIAL_TIMER+FixationTime_withDots)/1000];
+            dotInfo.apXYD = [perm(10)*10 0 setpachdiam*10];%[0 0 setpachdiam*10];
             dotInfo.trialtype = [2, 1];
             dotInfo.isMovingCenter = false;
             dotInfo.isMovingTarget = true;
             dotInfo.changetime = [FixationTime_withDots/1000,FixationTime_withDots/1000 + perm(8)/1000];
-%              Eyelink('Message', 'SYNCTIME');
-            targets = newTargets(screenInfo,targets,[1,2],[0,0],[0,0],...
-                [7,7],[128,0,0;128,0,0]);
+            dotInfo.CenterOfMoving = [perm(10),0]; % [x,y]degree
+            dotInfo.DiameterOfMoving = perm(7);
+            %              Eyelink('Message', 'SYNCTIME');
+            targets = newTargets(screenInfo,targets,[1,2],[0,+Tloc* 10],[0,0],...
+                [3,9],[255,0,0;21,0,0]);
             screenInfo.rseed = [];
+            targets.show = [1,2];
             [frames, rseed, start_time, end_time, response, response_time] = ...
                 dotsX(screenInfo, dotInfo,targets);
             
@@ -483,7 +494,7 @@ end
         Eyelink('Shutdown');
         Screen('CloseAll');
     end
-
+S.TargetVelocity = TargetVelocity;
 %% Save the Stimulus Object
 
 save([SaveFolder, '\', edfFile, '.mat'],'S');

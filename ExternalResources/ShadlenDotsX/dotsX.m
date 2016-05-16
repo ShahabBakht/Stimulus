@@ -154,7 +154,7 @@ dotSize = dotInfo.dotSize; % probably better to leave this in pixels, but not su
 % ndots = min(dotInfo.maxDotsPerFrame, ...
 %     ceil(16.7 * apD .* apD * 0.01 / screenInfo.monRefresh));
 ndots = dotInfo.maxDotsPerFrame;
-
+% 
 % Don't worry about pre-allocating, the number of dot fields should never be 
 % large enough to cause memory problems.
 for df = 1 : dotInfo.numDotField
@@ -206,6 +206,7 @@ Priority(priorityLevel);
 
 % Make sure the fixation still on
 for i = showtar
+    i = 1;
     Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
 end
 
@@ -219,8 +220,19 @@ Screen('DrawingFinished',curWindow,dontclear);
 t1 = GetSecs;
 syncflag = true;
 if dotInfo.isMovingTarget && ~isempty(targets)
-    TargetInitialPosition = targets.rects(2,[1,3]);
+    TargetInitialPositionX = targets.rects(2,[1,3]);
+    TargetInitialPositionY = targets.rects(2,[2,4]);
 end
+
+% center of moving dots patch
+
+MPCenterX = dotInfo.CenterOfMoving(1) * (10/dotInfo.apXYD(3)) + .5;
+MPCenterY = dotInfo.CenterOfMoving(2) * (10/dotInfo.apXYD(3)) + .5;
+BorderX = [MPCenterX - (dotInfo.DiameterOfMoving/2)*(10/dotInfo.apXYD(3))...
+    ,MPCenterX + (dotInfo.DiameterOfMoving/2) * (10/dotInfo.apXYD(3))];   
+BorderY = [MPCenterY - (dotInfo.DiameterOfMoving/2)*(10/dotInfo.apXYD(3)),...
+    MPCenterY + (dotInfo.DiameterOfMoving/2) * (10/dotInfo.apXYD(3))];  
+
 while continue_show
     for df = 1 : dotInfo.numDotField
         % ss is the matrix with 3 sets of dot positions, dots from the last 2 
@@ -248,7 +260,10 @@ while continue_show
         % Offset the selected dots
         if ~isempty(dotInfo.changetime) && ((GetSecs - t1) > dotInfo.changetime(2) || (GetSecs - t1) < dotInfo.changetime(1))
             this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdyc{df}(L,:));
+            
         else
+            whichdotsmove = (this_s{df}(:,1) > BorderX(1)) & (this_s{df}(:,1) < BorderX(2)) & (this_s{df}(:,2) > BorderY(1)) & (this_s{df}(:,2) < BorderY(2)); 
+%             this_s{df}(whichdotsmove,:) = bsxfun(@plus,this_s{df}(whichdotsmove,:),dxdy{df}(whichdotsmove,:));
             this_s{df}(L,:) = bsxfun(@plus,this_s{df}(L,:),dxdy{df}(L,:));
         end
         
@@ -315,11 +330,12 @@ while continue_show
         outCircle = sqrt(xyDis(1,:).^2 + xyDis(2,:).^2) + dotInfo.dotSize/2 > center(df,3);        
         dots2Display = dot_show{df};
         dots2Display(:,outCircle) = NaN;
-        if dotInfo.isMovingCenter && (GetSecs - t1) > dotInfo.initTime
+        if dotInfo.isMovingCenter && (GetSecs - t1) > dotInfo.initTime && (GetSecs - t1) < dotInfo.changetime(2)
            
             Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2)+...
                 [dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd,0],1);
            %
+        elseif  (GetSecs - t1) > dotInfo.changetime(2)
         else
             Screen('DrawDots',curWindow,dots2Display,dotSize,dotColor,center(df,1:2),1);
         end
@@ -330,10 +346,16 @@ while continue_show
     for i = showtar
         if dotInfo.isMovingTarget && size(targets.rects,1)>1 && (GetSecs - t1)>dotInfo.initTime %changed
 %             targets.x(2) = targets.x(2) + dotInfo.initTime*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd+(GetSecs-t1-dotInfo.initTime)*dotInfo.speed*cos(dotInfo.dir)*screenInfo.ppd
-            targets.rects(2,[1,3]) = TargetInitialPosition - cos(dotInfo.targetdir)*dotInfo.setstepsize*10 + (GetSecs-t1-dotInfo.initTime)*dotInfo.targetspeed*cos(dotInfo.targetdir)*screenInfo.ppd;
-%             %
+            targets.rects(2,[1,3]) = TargetInitialPositionX - cos(dotInfo.targetdir)*dotInfo.setstepsize*10 + (GetSecs-t1-dotInfo.initTime)*dotInfo.targetspeed*cos(dotInfo.targetdir)*screenInfo.ppd;
+            targets.rects(2,[2,4]) = TargetInitialPositionY - sin(dotInfo.targetdir)*dotInfo.setstepsize*10 + (GetSecs-t1-dotInfo.initTime)*dotInfo.targetspeed*sin(dotInfo.targetdir)*screenInfo.ppd;
+          if (GetSecs - t1) < dotInfo.changetime(2)  
+%             i = 1;
             Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
+          elseif (GetSecs - t1) > dotInfo.changetime(2)
+            Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
+          end
         else
+%             i = 1;
             Screen('FillOval',screenInfo.curWindow,targets.colors(i,:),targets.rects(i,:));
         end
     end
@@ -428,9 +450,11 @@ Screen('Flip',curWindow,0,dontclear);
 
 % Erase the last frame of dots, but leave up fixation and targets (if targets 
 % are up). Make sure the fixation still on.
+showtar = 2;
 showTargets(screenInfo,targets,showtar);
 
 end_time = GetSecs;
 Priority(0);
+
 
 
