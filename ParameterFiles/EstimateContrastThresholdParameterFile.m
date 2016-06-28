@@ -1,4 +1,4 @@
-S.numTrials               = 40;
+S.numTrials               = 60; % usually 40
 S.postResponseWaitTime    = 0.2; %seconds
 S.Ydim                    = 23;
 S.Xdim                    = 35;
@@ -20,10 +20,12 @@ S.sigma = 0.5;
 S.f = 1/S.xPPD;
 
 % QUEST parameters
-S.pThreshold              = 0.75;
+S.pThreshold              = 0.82;
 S.beta                    = 3.5;
 S.delta                   = 0.01;
 S.gamma                   = 0.5;
+S.range                   = 5;
+S.plotIt                  = 1;
 
 S.numFrames               = 30; % temporal period, in frames, of the drifting grating
 

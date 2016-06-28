@@ -13,6 +13,8 @@ pThreshold = S.pThreshold;
 beta = S.beta;
 delta = S.delta;
 gamma = S.gamma;
+range = S.range;
+plotIt = S.plotIt;
 numFrames = S.numFrames;
 wf = S.wf;
 K = S.K;
@@ -83,7 +85,7 @@ try
         tGuessSd=input('Estimate the standard deviation of your guess, above, (e.g. 2): ');
     end
 
-    q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma);
+    q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma,[],range,plotIt);
     q.normalizePdf=1; % This adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
     fprintf('Your initial guess was %g +- %g\n',tGuess,tGuessSd);
     
@@ -106,14 +108,14 @@ try
        % level in that trail determined by QUEST
     timeZero=eval(getSecsFunction);
     % Get recommended level.  Choose your favorite algorithm.
-	tTest=QuestQuantile(q);	% Recommended by Pelli (1987), and still our favorite.
-	% tTest=QuestMean(q);		% Recommended by King-Smith et al. (1994)
-	% tTest=QuestMode(q);		% Recommended by Watson & Pelli (1983)
+% 	tTest=QuestQuantile(q);	% Recommended by Pelli (1987), and still our favorite.
+	tTest=QuestMean(q);		% Recommended by King-Smith et al. (1994)
+% 	tTest=QuestMode(q);		% Recommended by Watson & Pelli (1983)
 	
 	% We are free to test any intensity we like, not necessarily what Quest suggested.
-		tTest=min(-0.05,max(-3,tTest)); % Restrict to range of log contrasts that our equipment can produce.
+% 		tTest=min(-0.05,max(-3,tTest)); % Restrict to range of log contrasts that our equipment can produce.
     %   tTest=min(-0.05,max(-3,tTest));
-    dK = 2^tTest;
+    dK(trcount) = 10^tTest;
     phi = (90*rand) * pi/180;
     
     thisSign = randn;
@@ -128,7 +130,7 @@ try
     end
     
     L1 = sin(x * wf + phi) .* ...
-        (K + dK * exp(-((x/sigmaX).^2 + ((y + thisSign*muY)/sigmaY).^2)));
+        (K + dK(trcount) * exp(-((x/sigmaX).^2 + ((y + thisSign*muY)/sigmaY).^2)));
     L1 = padarray(L1,[floor((size(G,1)-size(L1,1))/2),floor((size(G,2)-size(L1,2))/2)]);
     L(:,:,trcount) =  L1.* G; %#ok<AGROW>
     
@@ -231,14 +233,14 @@ try
         if keyIsDown
             
             if responseKeyCode(upKey)
-                Response{trcount} = 'UP';
+                Response= 'UP';
                 Screen('FrameRect', w, [0 0 0], [fixationRect(1) - 10,fixationRect(2) - 10, fixationRect(3) + 10, fixationRect(4) + 10]);
                 Screen('FillRect', w, [0 0 0], [fixationRect(1)- 10,fixationRect(2) - 10, fixationRect(3)+10, fixationRect(4)-5]);
                 Screen('Flip', w);
                 WaitSecs(postResponseWaitTime);
                 break;
             elseif responseKeyCode(downKey)
-                Response{trcount} = 'DOWN';
+                Response = 'DOWN';
                 Screen('FrameRect', w, [0 0 0], [fixationRect(1) - 10,fixationRect(2) - 10, fixationRect(3) + 10, fixationRect(4) + 10]);
                 Screen('FillRect', w, [0 0 0], [fixationRect(1) - 10,fixationRect(2)+5, fixationRect(3)+10, fixationRect(4) + 10]);
                 Screen('Flip', w);
@@ -254,12 +256,12 @@ try
         end
     end
     % create 'response' for QUEST
-            if strcmp(Response{trcount},targetLocation{trcount})
-                response = 1;
+            if strcmp(Response,targetLocation{trcount})
+                response(trcount) = 1;
             else
-                response = 0;
+                response(trcount) = 0;
             end
-    q=QuestUpdate(q,tTest,response);
+    q=QuestUpdate(q,tTest,response(trcount));
     
     end
 
@@ -275,21 +277,16 @@ try
     % Close window:
     Screen('CloseAll');
     
-    t=QuestQuantile(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
+    t=QuestMean(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
     sd=QuestSd(q);
-    fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
+    fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',10^t,sd);
     
     
-%     contrasts = -2:0.001:2;
-%     p = QuestP(q,contrasts);    
-%     figure;plot(contrasts+t,p,'k','LineWidth',2);
-%     grid on;grid minor;title('Psychometric Function')
-%     xlabel('Log Contrasts');ylabel('Probability of Correct')
-%     hold on
-%     plot(ones(1,length(0:0.01:1)),0:0.01:1,'.r')
-%     plot(contrasts,0.75 * ones(1,length(contrasts)),'.r')
-S.QUEST = q;
-save([S.SaveFolder, '\Temp', '.mat'],'S');
+
+    S.QUEST = q;
+    S.dK = dK;
+    
+    save([S.SaveFolder, '\Temp', '.mat'],'S');
     
 catch
     %this "catch" section executes in case of an error in the "try" section
