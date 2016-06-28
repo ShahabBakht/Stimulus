@@ -17,6 +17,7 @@ S.Type = {...
 };
 
 % Select the percentage of screen horizontal and vertical coverage here
+% (for eyelink)
 S.ScreenCov_v = 0.4571;
 S.ScreenCov_h = 0.3556;
 
