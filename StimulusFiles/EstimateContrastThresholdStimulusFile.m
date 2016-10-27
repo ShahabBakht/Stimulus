@@ -97,7 +97,7 @@ try
     fixationRect = [0 0 fixR * xPPD fixR * yPPD];
     fixationRect=CenterRect(fixationRect, screenRect);
     
-    Screen('Preference', 'SkipSyncTests', 1);
+    Screen('Preference', 'SkipSyncTests', 0);
 	% Compute each frame of the movie and convert the those frames, stored in
 	% MATLAB matices, into Psychtoolbox OpenGL textures using 'MakeTexture';
     KbName('UnifyKeyNames');
@@ -187,7 +187,7 @@ try
         % That usually means we run on a flat panel with 60 Hz fixed refresh
         % rate:
         if frameRate == 0
-            frameRate=60;
+            frameRate=85;
         end
         movieDurationSecs=numFrames*(1/frameRate);
         
@@ -279,13 +279,15 @@ try
     
     t=QuestMean(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
     sd=QuestSd(q);
-    fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',10^t,sd);
+    fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',t,sd);
     
     
 
     S.QUEST = q;
     S.dK = dK;
-    
+    S.response = response;
+    S.estimateThreshold = t;
+    S.sdThreshold = sd;
     save([S.SaveFolder, '\Temp', '.mat'],'S');
     
 catch

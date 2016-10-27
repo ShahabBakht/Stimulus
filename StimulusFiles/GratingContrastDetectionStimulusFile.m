@@ -76,14 +76,14 @@ try
     
     % Open a double buffered fullscreen window and select a gray background
     % color:
-    Screen('Preference', 'SkipSyncTests', 1);
+    Screen('Preference', 'SkipSyncTests', 0);
     [w, screenRect]=Screen('OpenWindow',screenNumber, gray);
     frameRate=Screen('FrameRate',screenNumber);
     % If MacOSX does not know the frame rate the 'FrameRate' will return 0.
     % That usually means we run on a flat panel with 60 Hz fixed refresh
     % rate:
     if frameRate == 0
-        frameRate=60;
+        frameRate=85;
     end
     
     KbName('UnifyKeyNames');

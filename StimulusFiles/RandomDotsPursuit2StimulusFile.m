@@ -329,7 +329,7 @@ try
             end
             Tloc = perm(10);
             targets = newTargets(screenInfo,targets,[1,2],[0,+Tloc * 10],[0,0],...
-                [3,9],[255,0,0;150,150,150]);
+                [3,9],[255,0,0;150,0,0]);
             showTargets(screenInfo, targets, [1,2]);
             FixationTime_noDots = (FixationTimeMin_noDots + (FixationTimeMax_noDots-FixationTimeMin_noDots) * rand);
             pause(FixationTime_noDots/1000);
