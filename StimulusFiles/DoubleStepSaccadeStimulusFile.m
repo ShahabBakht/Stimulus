@@ -154,11 +154,11 @@ try
         thisFixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
         Screen('FillOval',window,[255 255 255],Position0);
         Screen('Flip', window);
-        Eyelink('Message', 'SYNCTIME');
         WaitSecs(thisFixationTime);
         
         Screen('FillOval',window,[255 0 0],Position1);
         Screen('Flip', window);
+        Eyelink('Message', 'SYNCTIME');
         WaitSecs(waitTimeT1/1000);
         
         Screen('FillOval',window,[0 255 0],Position2);
