@@ -4,13 +4,14 @@ FixationTimeMin     =   S.FixationTimeMin;
 FixationTimeMax     =   S.FixationTimeMax;
 amplitudeT1         =   S.amplitudeT1;
 amplitudeT2         =   S.amplitudeT2;
-PPDx                =   S.PPDx;
-PPDy                =   S.PPDy;
+PPDx                =   S.PPD_X;
+PPDy                =   S.PPD_Y;
 targetSize          =   S.targetSize;
 waitTimeEnd         =   S.waitTimeEnd;
 numConditions       =   S.numConditions;
 conditions          =   S.conditions;
 numTrials           =   S.numTrials;
+SaveFolder          =   S.SaveFolder;
 
 trials = [];
 for condcount = 1:numConditions
@@ -50,6 +51,7 @@ try
     el.calibrationtargetsize= 1;
     el.calibrationtargetwidth=0.5;
     EyelinkUpdateDefaults(el);
+    dummymode = 0;
     if ~EyelinkInit(dummymode)
         fprintf('Eyelink Init aborted.\n');
         cleanup;  % cleanup function
@@ -150,7 +152,7 @@ try
         Eyelink('StartRecording');
         WaitSecs(0.1);
         eye_used = Eyelink('EyeAvailable');
-        
+        EyelinkDoDriftCorrection(el);
         thisFixationTime = ((FixationTimeMin + (FixationTimeMax-FixationTimeMin) * rand)/1000);
         Screen('FillOval',window,[255 255 255],Position0);
         Screen('Flip', window);
@@ -191,6 +193,10 @@ catch
 end
 ListenChar(0);
 cleanup;
+
+%% Save the Stimulus Object
+
+save([SaveFolder, '\', edfFile, '.mat'],'S');
 
 end
 

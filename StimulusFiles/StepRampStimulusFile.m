@@ -254,8 +254,8 @@ try
 
         x = sine_plot_x + (velocityX * t) * PPD_X;
         y = sine_plot_y + (velocityY * t) * PPD_Y;
-        
-        if ((velocityX * t)^2 + (velocityY * t)^2) > amplitude^2
+        jitter = rand;
+        if ((velocityX * t)^2 + (velocityY * t)^2) > (amplitude + jitter)^2
             StopFlag = true;
         else
             StopFlag = false;
@@ -297,7 +297,7 @@ try
         while GetSecs < fixationTime
         
             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillOval', window,[255 0 0], [(dots(1,1) - 10), (dots(2,1) - 10), (dots(1,1) + 10), (dots(2,1) + 10)]);
+            Screen('FillOval', window,[255 255 255], [(dots(1,1) - 10), (dots(2,1) - 10), (dots(1,1) + 10), (dots(2,1) + 10)]);
             Screen('Flip', window);
         
         end
@@ -313,7 +313,7 @@ try
             % for drawing of smoothed points:
             Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillOval', window,[255 0 0], ball);
+            Screen('FillOval', window,[255 255 255], ball);
             Screen('Flip', window);
             Eyelink('Message', 'SYNCTIME');
 
@@ -340,7 +340,7 @@ try
         while GetSecs < fixationTime
         
             Screen('FillRect', window, el.backgroundcolour);
-            Screen('FillOval', window,[255 0 0], [(x - 10), (y - 10), (x + 10), (y + 10)]);
+            Screen('FillOval', window,[255 255 255], [(x - 10), (y - 10), (x + 10), (y + 10)]);
             Screen('Flip', window);
         
         end
