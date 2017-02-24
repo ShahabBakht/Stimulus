@@ -8,7 +8,10 @@ S.ScreenCov_v = 0.4571;
 S.ScreenCov_h = 0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 2;
+S.numTrials = 30;
+S.spatialSTD = 1; % in degrees
+S.targetWindow = 1.5; % in degrees
+S.targetFixationTime = 0.05; % in seconds
 
 try
     
@@ -52,7 +55,7 @@ try
     el.calibrationtargetcolour=WhiteIndex(el.window);
     el.msgfontcolour = WhiteIndex(el.window);
     el.backgroundcolour = BlackIndex(el.window);
-    
+    el.targetbeep = 0;
     EyelinkUpdateDefaults(el);
     
     % Initialization of the connection with the Eyelink tracker
@@ -120,8 +123,8 @@ try
     smallestY = windowSubPart(2);
     meanTargetLocation_x = rangeX * rand + smallestX;
     meanTargetLocation_y = rangeY * rand + smallestY;
-    stdTargetLocation_x = 0;
-    stdTargetLocation_y = 0;
+    stdTargetLocation_x = S.spatialSTD * S.PPD_X;
+    stdTargetLocation_y = S.spatialSTD * S.PPD_Y;
     
     
     for trcount = 1:S.numTrials
@@ -151,20 +154,14 @@ try
     
     thisTargetLocation = normrnd([meanTargetLocation_x,meanTargetLocation_y],...
         [stdTargetLocation_x,stdTargetLocation_y]);
-    result.thisTargetLocation = thisTargetLocation;
+    result.thisTargetLocation(:,trcount) = thisTargetLocation;
     % if target should be visible uncomment below lines
-    % Screen('FillOval',el.window, [0, 0 , 0], ...
-    %   [thisTargetLocation(1)-5,thisTargetLocation(2)-5,thisTargetLocation(1)+5,thisTargetLocation(2)+5]);
-    % Screen('FillOval',el.window, [255, 255 , 255], ...
-    %    [thisTargetLocation(1)-2,thisTargetLocation(2)-2,thisTargetLocation(1)+2,thisTargetLocation(2)+2]);
+%     Screen('FillOval',el.window, [0, 0 , 0], ...
+%       [thisTargetLocation(1)-5,thisTargetLocation(2)-5,thisTargetLocation(1)+5,thisTargetLocation(2)+5]);
+%     Screen('FillOval',el.window, [255, 255 , 255], ...
+%        [thisTargetLocation(1)-2,thisTargetLocation(2)-2,thisTargetLocation(1)+2,thisTargetLocation(2)+2]);
     
     
-%     % Some useful info for user about what's happening.
-%     [width, height]=Screen('WindowSize', el.window);
-% 
-%     Screen('TextFont', el.window, el.msgfont);
-%     Screen('TextSize', el.window, el.msgfontsize);
-%     Screen('DrawText', el.window, 'Just look around for a while.', 200, height-el.msgfontsize-20, el.msgfontcolour);
 
     % Show result on screen:
     Screen('Flip', el.window)
@@ -174,6 +171,8 @@ try
     % wait a while to record a bunch of samples  
     mx = [];
     my = [];
+    
+    finalMessage = 'You did not hit the target';
     startTime = GetSecs;
     initDetectionTime = GetSecs;
     while GetSecs < startTime + 20
@@ -189,6 +188,7 @@ try
             % if we do, get current gaze position from sample
             x = evt.gx(eye_used+1); % +1 as we're accessing MATLAB array
             y = evt.gy(eye_used+1);
+            
             % do we have valid data and is the pupil visible?
             if x~=el.MISSING_DATA && y~=el.MISSING_DATA && evt.pa(eye_used+1)>0
                 
@@ -196,15 +196,27 @@ try
                 my=[my,y];
                 
                 
-                    
-                    if abs(mx(end) - thisTargetLocation(1))<=10 && abs(my(end) - thisTargetLocation(2))<=10
-                        timer = GetSecs - initDetectionTime;
-                        if timer >= 0.05
-                            initDetectionTime = GetSecs;
-                            break
+                    evtype=Eyelink('getnextdatatype');
+                    % are we in a fixation state?
+                    if evtype==el.STARTFIX
+                        
+                        % if yes, are we fixating in a window around the target? 
+                        if abs(mx(end) - thisTargetLocation(1))<=S.targetWindow * S.PPD_X ...
+                                && abs(my(end) - thisTargetLocation(2))<=S.targetWindow * S.PPD_Y
+                           
+                            timer = GetSecs - initDetectionTime;
+                            
+                            % are we fixating for the required fixation
+                            % time?
+                            if timer >= S.targetFixationTime
+                                initDetectionTime = GetSecs;
+                                Beeper(450,0.4,.15);
+                                finalMessage = 'You hit the target';
+                                break
+                                
+                            end
                             
                         end
-                    
                     end
                 
             end
@@ -216,8 +228,14 @@ try
     
     % STEP 7 remove image
     Screen('FillRect', el.window, [0 0 0]);
-    Screen('DrawText', el.window, 'Well done!', winWidth/2, winHeight/2, el.msgfontcolour);
+    if strcmp(finalMessage,'You did not hit the target')
+        textColor = [255 0 0];
+    else
+        textColor = [0 255 0];
+    end
+    Screen('DrawText', el.window, finalMessage, winWidth/2, winHeight/2, textColor);
     Screen('Flip', el.window);
+    WaitSecs(3);
     % mark image removal time in data file
     Eyelink('Message', 'ENDTIME');
     WaitSecs(0.5);
@@ -231,9 +249,12 @@ try
     X{trcount} = mx;
     Y{trcount} = my;
     
+    
     end
     result.eyeX = X;
     result.eyeY = Y;
+    
+    
     
     Eyelink('CloseFile');    
     
