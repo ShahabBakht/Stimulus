@@ -8,10 +8,14 @@ S.ScreenCov_v = 0.4571;
 S.ScreenCov_h = 0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 30;
+S.numTrials = 5;
 S.spatialSTD = 1; % in degrees
 S.targetWindow = 1.5; % in degrees
 S.targetFixationTime = 0.05; % in seconds
+S.initFixationTime = 0.3; % in seconds
+S.numBGImages = 3;
+S.fixationPointSTD = 4; % in degrees
+S.fixWindow = 1; % in degrees
 
 try
     
@@ -128,17 +132,61 @@ try
     
     
     for trcount = 1:S.numTrials
-    EyelinkDoDriftCorrection(el);
-    
+        mx = [];
+        my = [];
+        EyelinkDoDriftCorrection(el);
+        thisFixationLocation = normrnd([winWidth/2, winHeight/2],...
+            [S.fixationPointSTD * S.PPD_X,S.fixationPointSTD * S.PPD_X]);
+        result.thisFixationLocation(:,trcount) = thisFixationLocation;
         
+        % Start recording eye position
+        Eyelink('StartRecording');
+        eye_used = Eyelink('EyeAvailable'); % get eye that's tracked
+        % record a few samples before we actually start displaying
+        WaitSecs(0.05);
+        
+        % show fixation point with gray background 
+        Screen('FillRect', el.window, [128 128 128]);
+        Screen('FillOval',el.window, [0, 0 , 0], ...
+            [thisFixationLocation(1)-9,thisFixationLocation(2)-9,thisFixationLocation(1)+9,thisFixationLocation(2)+9]);
+        Screen('FillOval',el.window, [255, 255 , 255], ...
+            [thisFixationLocation(1)-4,thisFixationLocation(2)-4,thisFixationLocation(1)+4,thisFixationLocation(2)+4]);
+        Screen('Flip', el.window);
+        
+        % loop until the subject fixates on the initial fixation point for
+        % S.initFixationTime
+        [keyPress, keyTime, keyID] = KbCheck(-1);
+        oldKeyID = keyID;
+        timeZero = GetSecs;
+        while  GetSecs<(timeZero+1)%1
+            evt = Eyelink( 'NewestFloatSample');
+            if eye_used ~= -1 % do we know which eye to use yet?
+                % if we do, get current gaze position from sample
+                x = evt.gx(eye_used+1); % +1 as we're accessing MATLAB array
+                y = evt.gy(eye_used+1);
+                
+                % do we have valid data and is the pupil visible?
+                if x~=el.MISSING_DATA && y~=el.MISSING_DATA && evt.pa(eye_used+1)>0
+                    
+                    mx=[mx,x];
+                    my=[my,y];
+                    [keyPress, keyTime, keyID] = KbCheck(-1);
+                    if any(keyID-oldKeyID)
+                        keyPressID = keyID;
+                        oldKeyID = keyID;
+                    else
+                        keyPressID = zeros(size(keyID));
+                    end
+                    if keyPressID(KbName('return'))
+                        timeStartTrial = GetSecs - timeZero;
+                        break
+                    end
+                    
+                end
+            end
+        end % end of initial fixation 
     
-    % Start recording eye position
-    Eyelink('StartRecording');
-    eye_used = Eyelink('EyeAvailable'); % get eye that's tracked
-    % record a few samples before we actually start displaying
-    WaitSecs(0.5);
-
-    % STEP 6
+%     result.timeStartTrial(trcount) = timeStartTrial;     
     % Show image on display
     myimg='konijntjes1024x768.jpg';
     imdata=imread(myimg);
@@ -169,8 +217,8 @@ try
     % mark zero-plot time in data file
     Eyelink('Message', 'SYNCTIME');
     % wait a while to record a bunch of samples  
-    mx = [];
-    my = [];
+%     mx = [];
+%     my = [];
     
     finalMessage = 'You did not hit the target';
     startTime = GetSecs;
