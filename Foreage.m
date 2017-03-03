@@ -1,21 +1,36 @@
 function result=Foreage
 
 
-
-
 commandwindow;
 S.ScreenCov_v = 0.4571;
 S.ScreenCov_h = 0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 5;
+S.numTrials = 50;
 S.spatialSTD = 1; % in degrees
 S.targetWindow = 1.5; % in degrees
 S.targetFixationTime = 0.05; % in seconds
 S.initFixationTime = 0.3; % in seconds
-S.numBGImages = 3;
-S.fixationPointSTD = 4; % in degrees
+S.numBGImages = 2;
+S.fixationPointSTD = 0; % in degrees
 S.fixWindow = 1; % in degrees
+S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\BGImages\';
+
+result.StimulusObject = S;
+
+% order of trials and bg images
+imagesID = 1:S.numBGImages;
+allTrials = repmat(imagesID,1,S.numTrials);
+trialsOrder = randperm(length(allTrials));
+result.trialsOrder = trialsOrder;
+
+% which images to use
+listOfBGImages = ls(S.BGImagesFolder);
+listOfBGImages = listOfBGImages(3:end,:);
+whichBGImages2Use = randperm(size(listOfBGImages,1),S.numBGImages);
+BGImages2Use = listOfBGImages(whichBGImages2Use,:);
+S.BGImages2Use = BGImages2Use;
+
 
 try
     
@@ -120,18 +135,21 @@ try
     % Location of the image on the screen
     windowSubPart = [winWidth/2 - wRect(3) * S.ScreenCov_h/2, winHeight/2 - wRect(4) * S.ScreenCov_v/2, ...
         winWidth/2 + wRect(3) * S.ScreenCov_h/2,  winHeight/2 + wRect(4) * S.ScreenCov_v/2];
-    % Location of the target
+    
+    % Location of the targets on each bg image
     rangeX = windowSubPart(3) - windowSubPart(1);
     rangeY = windowSubPart(4) - windowSubPart(2);
     smallestX = windowSubPart(1);
     smallestY = windowSubPart(2);
-    meanTargetLocation_x = rangeX * rand + smallestX;
-    meanTargetLocation_y = rangeY * rand + smallestY;
+    meanTargetLocation_x = rangeX * rand(S.numBGImages,1) + smallestX;
+    meanTargetLocation_y = rangeY * rand(S.numBGImages,1) + smallestY;
     stdTargetLocation_x = S.spatialSTD * S.PPD_X;
     stdTargetLocation_y = S.spatialSTD * S.PPD_Y;
     
     
-    for trcount = 1:S.numTrials
+    for trcount = 1:(S.numTrials * S.numBGImages)
+        thisTrialBGImage = allTrials(trialsOrder(trcount));
+        thisBGImageName = BGImages2Use(thisTrialBGImage,:);
         mx = [];
         my = [];
         EyelinkDoDriftCorrection(el);
@@ -141,6 +159,7 @@ try
         
         % Start recording eye position
         Eyelink('StartRecording');
+        timeZero = GetSecs;
         eye_used = Eyelink('EyeAvailable'); % get eye that's tracked
         % record a few samples before we actually start displaying
         WaitSecs(0.05);
@@ -151,44 +170,49 @@ try
             [thisFixationLocation(1)-9,thisFixationLocation(2)-9,thisFixationLocation(1)+9,thisFixationLocation(2)+9]);
         Screen('FillOval',el.window, [255, 255 , 255], ...
             [thisFixationLocation(1)-4,thisFixationLocation(2)-4,thisFixationLocation(1)+4,thisFixationLocation(2)+4]);
-        Screen('Flip', el.window);
+        Screen('Flip',el.window);
         
         % loop until the subject fixates on the initial fixation point for
         % S.initFixationTime
         [keyPress, keyTime, keyID] = KbCheck(-1);
         oldKeyID = keyID;
-        timeZero = GetSecs;
-        while  GetSecs<(timeZero+1)%1
-            evt = Eyelink( 'NewestFloatSample');
-            if eye_used ~= -1 % do we know which eye to use yet?
-                % if we do, get current gaze position from sample
-                x = evt.gx(eye_used+1); % +1 as we're accessing MATLAB array
-                y = evt.gy(eye_used+1);
-                
-                % do we have valid data and is the pupil visible?
-                if x~=el.MISSING_DATA && y~=el.MISSING_DATA && evt.pa(eye_used+1)>0
+        
+        counter = 0;
+        while  1%GetSecs<(timeZero+2)%
+            if Eyelink( 'NewFloatSampleAvailable') > 0
+                evt = Eyelink( 'NewestFloatSample');
+                if eye_used ~= -1 % do we know which eye to use yet?
+                    % if we do, get current gaze position from sample
+                    x = evt.gx(eye_used+1); % +1 as we're accessing MATLAB array
+                    y = evt.gy(eye_used+1);
                     
-                    mx=[mx,x];
-                    my=[my,y];
-                    [keyPress, keyTime, keyID] = KbCheck(-1);
-                    if any(keyID-oldKeyID)
-                        keyPressID = keyID;
-                        oldKeyID = keyID;
-                    else
-                        keyPressID = zeros(size(keyID));
+                    % do we have valid data and is the pupil visible?
+                    if x~=el.MISSING_DATA && y~=el.MISSING_DATA && evt.pa(eye_used+1)>0
+                        counter = counter + 1;
+                        mx=[mx,x];
+                        my=[my,y];
+                        [keyPress, keyTime, keyID] = KbCheck(-1);
+                        if any(keyID-oldKeyID)
+                            keyPressID = keyID;
+                            oldKeyID = keyID;
+                        else
+                            keyPressID = zeros(size(keyID));
+                        end
+                        if keyPressID(KbName('return'))
+                            timeStartTrial = GetSecs - timeZero;
+                            break
+                        end
+                        
                     end
-                    if keyPressID(KbName('return'))
-                        timeStartTrial = GetSecs - timeZero;
-                        break
-                    end
-                    
                 end
             end
-        end % end of initial fixation 
+        end % end of initial fixation
     
-%     result.timeStartTrial(trcount) = timeStartTrial;     
+    result.timeStartTrial(trcount) = timeStartTrial;    
+
     % Show image on display
-    myimg='konijntjes1024x768.jpg';
+%     myimg='konijntjes1024x768.jpg';
+    myimg = [S.BGImagesFolder,thisBGImageName];
     imdata=imread(myimg);
     imtex=Screen('MakeTexture', el.window, imdata);
     
@@ -199,8 +223,9 @@ try
     Screen('DrawTexture', el.window, imtex, [], windowSubPart);  % fill screen with image
     
     
-    
-    thisTargetLocation = normrnd([meanTargetLocation_x,meanTargetLocation_y],...
+    thismeanTargetLocation_x = meanTargetLocation_x(thisTrialBGImage);
+    thismeanTargetLocation_y = meanTargetLocation_y(thisTrialBGImage);
+    thisTargetLocation = normrnd([thismeanTargetLocation_x,thismeanTargetLocation_y],...
         [stdTargetLocation_x,stdTargetLocation_y]);
     result.thisTargetLocation(:,trcount) = thisTargetLocation;
     % if target should be visible uncomment below lines
