@@ -6,12 +6,12 @@ S.ScreenCov_v = 0.4571;
 S.ScreenCov_h = 0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 50;
-S.spatialSTD = 1; % in degrees
-S.targetWindow = 1.5; % in degrees
+S.numTrials = 10;
+S.spatialSTD = 0;%1; % in degrees
+S.targetWindow = 2; % in degrees
 S.targetFixationTime = 0.05; % in seconds
 S.initFixationTime = 0.3; % in seconds
-S.numBGImages = 2;
+S.numBGImages = 1;
 S.fixationPointSTD = 0; % in degrees
 S.fixWindow = 1; % in degrees
 S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\BGImages\';
@@ -229,10 +229,10 @@ try
         [stdTargetLocation_x,stdTargetLocation_y]);
     result.thisTargetLocation(:,trcount) = thisTargetLocation;
     % if target should be visible uncomment below lines
-%     Screen('FillOval',el.window, [0, 0 , 0], ...
-%       [thisTargetLocation(1)-5,thisTargetLocation(2)-5,thisTargetLocation(1)+5,thisTargetLocation(2)+5]);
-%     Screen('FillOval',el.window, [255, 255 , 255], ...
-%        [thisTargetLocation(1)-2,thisTargetLocation(2)-2,thisTargetLocation(1)+2,thisTargetLocation(2)+2]);
+    Screen('FillOval',el.window, [0, 0 , 0], ...
+      [thisTargetLocation(1)-5,thisTargetLocation(2)-5,thisTargetLocation(1)+5,thisTargetLocation(2)+5]);
+    Screen('FillOval',el.window, [255, 255 , 255], ...
+       [thisTargetLocation(1)-2,thisTargetLocation(2)-2,thisTargetLocation(1)+2,thisTargetLocation(2)+2]);
     
     
 
