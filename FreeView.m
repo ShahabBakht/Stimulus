@@ -1,4 +1,4 @@
-function result=ForageWithBGjitter()
+function result=FreeView()
 
 
 commandwindow;
@@ -6,31 +6,59 @@ S.ScreenCov_v = 0.4571;
 S.ScreenCov_h = 0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 50;
-S.spatialSTD = 1;%0;%; % in degrees
+S.numTrials = 10; % should be even (equal number of false and true samples for the patch recognition
+S.spatialSTD = 0;%1; % in degrees
 S.targetWindow = 2; % in degrees
 S.targetFixationTime = 0.05; % in seconds
 S.initFixationTime = 0.3; % in seconds
-S.numBGImages = 4;
+S.numBGImages = 3;
 S.fixationPointSTD = 0; % in degrees
 S.fixWindow = 1; % in degrees
-S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\allImages\';
-S.maxJitter = 5; % in degrees (the horizontal and vertical jitter of the bg image)
-S.doProbe = 1; % false or true; set true, does the probe test at the end
+S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\BGImages\';
+S.patchRecognition = true; % true or false
+S.patchSize = 3.2; % degree
+S.whichType = {'Fractal','Urban'}; %'Fractal', 'Urban', 'Nature', 'Pink'
+S.timePerImage = 6; % second
+S.numRandomPatches = 20;
 
 
 % order of trials and bg images
 imagesID = 1:S.numBGImages;
-allTrials = repmat(imagesID,1,S.numTrials);
-trialsOrder = randperm(length(allTrials));
+typeID = 1:length(S.whichType);
+[imagesIDr, typeIDr] = meshgrid(imagesID,typeID);
+for i = 1:size(imagesIDr,1)*size(imagesIDr,2)
+    trialLabels(:,i) = [imagesIDr(i);typeIDr(i)];
+end
+allTrials = repmat(trialLabels,1,S.numTrials);
+trialsOrder = randperm(size(allTrials,2));
+
+if S.patchRecognition
+    recognitionTruth = [zeros(1,length(S.whichType)*S.numBGImages),...
+        ones(1,length(S.whichType)*S.numBGImages)];
+    recognitionTruth = repmat(recognitionTruth,1,S.numTrials/2);
+    allTrials = [allTrials;recognitionTruth];
+end
 result.trialsOrder = trialsOrder;
+result.allTrials = allTrials;
 
 % which images to use
-listOfBGImages = ls(S.BGImagesFolder);
-listOfBGImages = listOfBGImages(3:end,:);
-whichBGImages2Use = randperm(size(listOfBGImages,1),S.numBGImages);
-BGImages2Use = listOfBGImages(whichBGImages2Use,:);
-S.BGImages2Use = BGImages2Use;
+S.BGImages2Use = cell(1,2);
+S.BGImages2Patch = cell(1,2);
+for typecount = 1:length(S.whichType)
+    
+    listOfBGImages = ls([S.BGImagesFolder,S.whichType{typecount}]);
+    listOfBGImages = listOfBGImages(3:end,:);
+    whichBGImages = randperm(size(listOfBGImages,1),2 * S.numBGImages);
+    whichBGImages2Use = whichBGImages(1:S.numBGImages);
+    whichBGImages2Patch = whichBGImages((S.numBGImages + 1):2 * S.numBGImages);
+    BGImages2Use = listOfBGImages(whichBGImages2Use,:);
+    BGImages2Patch = listOfBGImages(whichBGImages2Patch,:);
+    S.BGImages2Use{1,typecount} = BGImages2Use;
+    S.BGImages2Patch{1,typecount} = BGImages2Patch;
+    
+end
+
+
 
 
 try
@@ -64,6 +92,49 @@ try
     result.wRect = wRect;
     result.winWidth = winWidth;
     result.winHeight = winHeight;
+    
+    % Location of the image on the screen
+    windowSubPart = [winWidth/2 - wRect(3) * S.ScreenCov_h/2, winHeight/2 - wRect(4) * S.ScreenCov_v/2, ...
+        winWidth/2 + wRect(3) * S.ScreenCov_h/2,  winHeight/2 + wRect(4) * S.ScreenCov_v/2];
+    
+    % Location of the targets on each bg image
+    rangeX = windowSubPart(3) - windowSubPart(1);
+    rangeY = windowSubPart(4) - windowSubPart(2);
+    
+    % prepare the test patches
+    if S.patchRecognition
+        
+        % loop on types of images and to be used images to draw 
+        % recognition patches 
+        for typecount = 1:length(S.whichType)
+            thisType = S.BGImages2Use{1,typecount};
+            for imcount = 1:S.numBGImages
+                thisImage = imread([S.BGImagesFolder,S.whichType{typecount},'\',thisType(imcount,:)]);
+                thisImage = imresize(thisImage,[rangeX,rangeY]);
+                for trcount = 1:S.numRandomPatches
+                    thisPatch(:,:,:,trcount) = drawRandomPatch(thisImage,S.patchSize * S.PPD_X);
+                end
+                S.BGImages2UsePatches{typecount,imcount} = thisPatch;
+            end
+        end
+        
+        % loop on types of images and to be patched images to draw
+        % recognition patches
+        for typecount = 1:length(S.whichType)
+            thisType = S.BGImages2Patch{1,typecount};
+            for imcount = 1:S.numBGImages
+                thisImage = imread([S.BGImagesFolder,S.whichType{typecount},'\',thisType(imcount,:)]);
+                thisImage = imresize(thisImage,[rangeX,rangeY]);
+                for trcount = 1:S.numRandomPatches
+                    thisPatch(:,:,:,trcount) = drawRandomPatch(thisImage,S.patchSize * S.PPD_X);
+                end
+                S.BGImages2PatchPatches{typecount} = thisPatch;
+            end
+            
+        end
+    
+    end
+    
     
     % Provide Eyelink with details about the graphics environment
     % and perform some initializations. The information is returned
@@ -129,50 +200,31 @@ try
     
     % Do setup and calibrate the eye tracker
     EyelinkDoTrackerSetup(el);
-    
-    Screen('HideCursorHelper', window);
 
-    % Location of the image on the screen
+    % do a final check of calibration using driftcorrection
+    % You have to hit esc before return.
     
     
-    
-    scaleBGh = (wRect(3) * S.ScreenCov_h/2 - S.maxJitter*S.PPD_X)/(wRect(3) * S.ScreenCov_h/2);
-    scaleBGv = (wRect(3) * S.ScreenCov_v/2 - S.maxJitter*S.PPD_X)/(wRect(3) * S.ScreenCov_v/2);
-    
-    windowSubPart_0 = [...
-        winWidth/2 + 0 - (wRect(3) * S.ScreenCov_h/2) * scaleBGh,...
-        winHeight/2 + 0 - (wRect(4) * S.ScreenCov_v/2) * scaleBGv, ...
-        winWidth/2 + 0 + (wRect(3) * S.ScreenCov_h/2) * scaleBGh, ...
-        winHeight/2 + 0 + (wRect(4) * S.ScreenCov_v/2) * scaleBGv ...
-        ];
-    windowSubPart = windowSubPart_0;
-    thisJitter_x = 0;
-    thisJitter_y = 0;
-    result.Jitters(:,1) = [thisJitter_x;thisJitter_y];
-    
-    
-    % Location of the targets on each bg image
-    rangeX = windowSubPart_0(3) - windowSubPart_0(1);
-    rangeY = windowSubPart_0(4) - windowSubPart_0(2);
-    smallestX = windowSubPart_0(1);
-    smallestY = windowSubPart_0(2);
+    smallestX = windowSubPart(1);
+    smallestY = windowSubPart(2);
     meanTargetLocation_x = rangeX * rand(S.numBGImages,1) + smallestX;
     meanTargetLocation_y = rangeY * rand(S.numBGImages,1) + smallestY;
     stdTargetLocation_x = S.spatialSTD * S.PPD_X;
     stdTargetLocation_y = S.spatialSTD * S.PPD_Y;
     
-    
-    for trcount = 1:((S.numTrials * S.numBGImages) + S.numBGImages * S.doProbe)
+    % the main loop
+    for trcount = 1:(S.numTrials * S.numBGImages * length(S.whichType))
+        thisTrialBGImageAndType = allTrials(:,trialsOrder(trcount));
+        thisTrialType = thisTrialBGImageAndType(2);
+        thisTrialBGImage = thisTrialBGImageAndType(1);
+        thisRecognitionTruth = thisTrialBGImageAndType(3);
+        thisBGImageName = S.BGImages2Use{1,thisTrialType}(thisTrialBGImage,:);
         
-        % is it one of the probe trials
-        if trcount > (S.numTrials * S.numBGImages)
-            thisBGImageName = BGImages2Use(tr - (S.numTrials * S.numBGImages),:);
-        else
-            thisTrialBGImage = allTrials(trialsOrder(trcount));
-            thisBGImageName = BGImages2Use(thisTrialBGImage,:);
-        end
         mx = [];
         my = [];
+        fixationX = [];
+        fixationY = [];
+        
         EyelinkDoDriftCorrection(el);
         thisFixationLocation = normrnd([winWidth/2, winHeight/2],...
             [S.fixationPointSTD * S.PPD_X,S.fixationPointSTD * S.PPD_X]);
@@ -233,38 +285,18 @@ try
 
     % Show image on display
 %     myimg='konijntjes1024x768.jpg';
-    myimg = [S.BGImagesFolder,thisBGImageName];
+    myimg = [S.BGImagesFolder,S.whichType{thisTrialType},'\',thisBGImageName];
     imdata=imread(myimg);
     imtex=Screen('MakeTexture', el.window, imdata);
     
     
     % Show the image
-    if trcount > (S.numTrials * S.numBGImages)
-        windowSubPart = [...
-        winWidth/2 - (wRect(3) * S.ScreenCov_h/2),...
-        winHeight/2 - (wRect(4) * S.ScreenCov_v/2), ...
-        winWidth/2 + (wRect(3) * S.ScreenCov_h/2), ...
-        winHeight/2 + (wRect(4) * S.ScreenCov_v/2) ...
-        ]; 
-    end
-    
     result.windowSubPart = windowSubPart;
     Screen('FillRect', el.window, [0 0 0]);
     Screen('DrawTexture', el.window, imtex, [], windowSubPart);  % fill screen with image
     
     
-    thismeanTargetLocation_x = meanTargetLocation_x(thisTrialBGImage);
-    thismeanTargetLocation_y = meanTargetLocation_y(thisTrialBGImage);
-    thisTargetLocation = normrnd([...
-        thismeanTargetLocation_x + thisJitter_x,...
-        thismeanTargetLocation_y + thisJitter_y],...
-        [stdTargetLocation_x,stdTargetLocation_y]);
-    result.thisTargetLocation(:,trcount) = thisTargetLocation;
-    % if target should be visible uncomment below lines
-%     Screen('FillOval',el.window, [0, 0 , 0], ...
-%       [thisTargetLocation(1)-5,thisTargetLocation(2)-5,thisTargetLocation(1)+5,thisTargetLocation(2)+5]);
-%     Screen('FillOval',el.window, [255, 255 , 255], ...
-%        [thisTargetLocation(1)-2,thisTargetLocation(2)-2,thisTargetLocation(1)+2,thisTargetLocation(2)+2]);
+    
     
     
 
@@ -277,10 +309,10 @@ try
 %     mx = [];
 %     my = [];
     
-    finalMessage = 'You did not hit the target';
+    finalMessage = 'Did you see this in the image?';
     startTime = GetSecs;
     initDetectionTime = GetSecs;
-    while GetSecs < startTime + 20
+    while GetSecs < startTime + S.timePerImage
 
     % Query  eyetracker") -
     % (mx,my) is our gaze position.
@@ -306,22 +338,8 @@ try
                     if evtype==el.STARTFIX
                         
                         % if yes, are we fixating in a window around the target? 
-                        if abs(mx(end) - thisTargetLocation(1))<=S.targetWindow * S.PPD_X ...
-                                && abs(my(end) - thisTargetLocation(2))<=S.targetWindow * S.PPD_Y
-                           
-                            timer = GetSecs - initDetectionTime;
-                            
-                            % are we fixating for the required fixation
-                            % time?
-                            if timer >= S.targetFixationTime
-                                initDetectionTime = GetSecs;
-                                Beeper(450,0.4,.15);
-                                finalMessage = 'You hit the target';
-                                break
-                                
-                            end
-                            
-                        end
+                        fixationX = [fixationX,x];
+                        fixationY = [fixationY,y];
                     end
                 
             end
@@ -332,15 +350,56 @@ try
     
     
     % STEP 7 remove image
-    Screen('FillRect', el.window, [0 0 0]);
-    if strcmp(finalMessage,'You did not hit the target')
-        textColor = [255 0 0];
-    else
-        textColor = [0 255 0];
-    end
-    Screen('DrawText', el.window, finalMessage, winWidth/2, winHeight/2, textColor);
-    Screen('Flip', el.window);
-    WaitSecs(3);
+    
+    timeZero = GetSecs;
+    
+        Screen('FillRect', el.window, [0 0 0]);
+        if strcmp(finalMessage,'You did not hit the target')
+            textColor = [255 0 0];
+        else
+            textColor = [0 255 0];
+        end
+        Screen('DrawText', el.window, finalMessage, winWidth/2 - 200, winHeight/2 -100, textColor);
+        Screen('DrawText', el.window, 'Yes', winWidth/2 - 200, winHeight/2, textColor);
+        Screen('DrawText', el.window, 'No', winWidth/2 + 200, winHeight/2, textColor);
+        if thisRecognitionTruth
+            whichRandPatch = randi(S.numRandomPatches);
+            thisTestPatch = S.BGImages2UsePatches{thisTrialType,thisTrialBGImage}(:,:,:,whichRandPatch);
+        else
+            whichRandPatch = randi(S.numRandomPatches);
+            thisTestPatch = S.BGImages2PatchPatches{thisTrialType}(:,:,:,whichRandPatch);
+            
+        end
+        
+        imtex=Screen('MakeTexture', el.window, thisTestPatch);
+        Screen('DrawTexture', el.window, imtex);  % fill screen with image
+        Screen('Flip', el.window);
+        
+        
+        while 1
+            
+            
+%             [~, ~, keyID] = KbCheck(-1);
+%             oldKeyID = keyID;
+%             if any(keyID-oldKeyID)
+%                 keyPressID = keyID;
+%                 oldKeyID = keyID;
+%             else
+%                 keyPressID = zeros(size(keyID));
+%             end
+            [~, keyCode, ~] = KbWait([],2);
+            if keyCode(KbName('RightArrow'))
+                responseTime = GetSecs - timeZero;
+                thisResponse = 0;
+                break
+            else keyCode(KbName('LeftArrow'))
+                responseTime = GetSecs - timeZero;
+                thisResponse = 1;
+                break
+            end
+        end
+    result.responseTime(trcount) = responseTime;
+    result.Responses(trcount) = thisResponse;
     % mark image removal time in data file
     Eyelink('Message', 'ENDTIME');
     WaitSecs(0.5);
@@ -353,25 +412,16 @@ try
     
     X{trcount} = mx;
     Y{trcount} = my;
-    
-    thisJitter_x = 2*(S.maxJitter*S.PPD_X) * rand - (S.maxJitter*S.PPD_X);
-    thisJitter_y = 2*(S.maxJitter*S.PPD_Y) * rand - (S.maxJitter*S.PPD_Y);
-    result.Jitters(:,trcount+1) = [thisJitter_x;thisJitter_y];
-    windowSubPart = [...
-        winWidth/2 + thisJitter_x - (wRect(3) * S.ScreenCov_h/2) * scaleBGh,...
-        winHeight/2 + thisJitter_y - (wRect(4) * S.ScreenCov_v/2) * scaleBGv, ...
-        winWidth/2 + thisJitter_x + (wRect(3) * S.ScreenCov_h/2) * scaleBGh, ...
-        winHeight/2 + thisJitter_y + (wRect(4) * S.ScreenCov_v/2) * scaleBGv ...
-        ];
+    Fixation_x{trcount} = fixationX;
+    Fixation_y{trcount} = fixationY;
     
     end
-    
-    
-    
     result.eyeX = X;
     result.eyeY = Y;
-    result.StimulusObject = S;
+    result.FixationX = Fixation_x;
+    result.FixationY = Fixation_y;
     
+    result.StimulusObject = S;
     
     Eyelink('CloseFile');    
     
@@ -400,7 +450,7 @@ catch myerr
     myerr.stack
 end %try..catch.
 
-
+end
 % Cleanup routine:
 function cleanup
 % Shutdown Eyelink:
@@ -411,3 +461,27 @@ sca;
 commandwindow;
 % Restore keyboard output to Matlab:
 ListenChar(0);
+end
+
+function randomPatch = drawRandomPatch(IM,patchSize)
+rangeX = size(IM,1);
+rangeY = size(IM,2);
+
+sampleAgain = 1;
+while sampleAgain
+patchCenter_x = rangeX * rand + 1;
+patchCenter_y = rangeY * rand + 1;
+if (patchCenter_x - floor(patchSize/2)) < 0 || (patchCenter_y - floor(patchSize/2)) < 0 || ...
+        (patchCenter_x + floor(patchSize/2)) > size(IM,1) || (patchCenter_y + floor(patchSize/2)) > size(IM,2)
+    sampleAgain = 1;
+else
+    sampleAgain = 0;
+end
+end
+ 
+randomPatch = IM((patchCenter_x - floor(patchSize/2)):(patchCenter_x + floor(patchSize/2)),...
+                 (patchCenter_y - floor(patchSize/2)):(patchCenter_y + floor(patchSize/2)),...
+                 : ...
+                 );
+
+end
