@@ -152,10 +152,10 @@ try
     
     
     % Location of the targets on each bg image
-    rangeX = windowSubPart_0(3) - windowSubPart_0(1);
-    rangeY = windowSubPart_0(4) - windowSubPart_0(2);
-    smallestX = windowSubPart_0(1);
-    smallestY = windowSubPart_0(2);
+    rangeX = windowSubPart_0(3) - windowSubPart_0(1) - (S.spatialSTD * S.PPD_X);
+    rangeY = windowSubPart_0(4) - windowSubPart_0(2) - (S.spatialSTD * S.PPD_Y);
+    smallestX = windowSubPart_0(1) + (S.spatialSTD * S.PPD_X);
+    smallestY = windowSubPart_0(2) + (S.spatialSTD * S.PPD_Y);
     meanTargetLocation_x = rangeX * rand(S.numBGImages,1) + smallestX;
     meanTargetLocation_y = rangeY * rand(S.numBGImages,1) + smallestY;
     stdTargetLocation_x = S.spatialSTD * S.PPD_X;
@@ -166,13 +166,17 @@ try
         
         % is it one of the probe trials
         if trcount > (S.numTrials * S.numBGImages)
-            thisBGImageName = BGImages2Use(tr - (S.numTrials * S.numBGImages),:);
+            thisBGImageName = BGImages2Use(trcount - (S.numTrials * S.numBGImages),:);
         else
             thisTrialBGImage = allTrials(trialsOrder(trcount));
             thisBGImageName = BGImages2Use(thisTrialBGImage,:);
         end
+        
         mx = [];
         my = [];
+        fixationX = [];
+        fixationY = [];
+        
         EyelinkDoDriftCorrection(el);
         thisFixationLocation = normrnd([winWidth/2, winHeight/2],...
             [S.fixationPointSTD * S.PPD_X,S.fixationPointSTD * S.PPD_X]);
@@ -239,6 +243,7 @@ try
     
     
     % Show the image
+    % if the probe trial, larger image, no std around the mean target
     if trcount > (S.numTrials * S.numBGImages)
         windowSubPart = [...
         winWidth/2 - (wRect(3) * S.ScreenCov_h/2),...
@@ -246,6 +251,15 @@ try
         winWidth/2 + (wRect(3) * S.ScreenCov_h/2), ...
         winHeight/2 + (wRect(4) * S.ScreenCov_v/2) ...
         ]; 
+        thisJitter_x = 0;
+        thisJitter_y = 0;
+        stdTargetLocation_x = 0;
+        stdTargetLocation_y = 0;
+        TargetWindow = S.targetWindow * (1/min(scaleBGh,scaleBGv));
+    else
+        
+        TargetWindow = S.targetWindow;
+    
     end
     
     result.windowSubPart = windowSubPart;
@@ -304,10 +318,11 @@ try
                     evtype=Eyelink('getnextdatatype');
                     % are we in a fixation state?
                     if evtype==el.STARTFIX
-                        
+                        fixationX = [fixationX,x];
+                        fixationY = [fixationY,y];
                         % if yes, are we fixating in a window around the target? 
-                        if abs(mx(end) - thisTargetLocation(1))<=S.targetWindow * S.PPD_X ...
-                                && abs(my(end) - thisTargetLocation(2))<=S.targetWindow * S.PPD_Y
+                        if abs(mx(end) - thisTargetLocation(1))<=TargetWindow  * S.PPD_X ...
+                                && abs(my(end) - thisTargetLocation(2))<=TargetWindow * S.PPD_Y
                            
                             timer = GetSecs - initDetectionTime;
                             
@@ -353,6 +368,8 @@ try
     
     X{trcount} = mx;
     Y{trcount} = my;
+    Fixation_x{trcount} = fixationX;
+    Fixation_y{trcount} = fixationY;
     
     thisJitter_x = 2*(S.maxJitter*S.PPD_X) * rand - (S.maxJitter*S.PPD_X);
     thisJitter_y = 2*(S.maxJitter*S.PPD_Y) * rand - (S.maxJitter*S.PPD_Y);
@@ -371,7 +388,8 @@ try
     result.eyeX = X;
     result.eyeY = Y;
     result.StimulusObject = S;
-    
+    result.FixationX = Fixation_x;
+    result.FixationY = Fixation_y;
     
     Eyelink('CloseFile');    
     

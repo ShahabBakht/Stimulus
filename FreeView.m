@@ -1,4 +1,4 @@
-function result=FreeView()
+function result=FreeView(FVresult)
 
 
 commandwindow;
@@ -11,7 +11,7 @@ S.spatialSTD = 0;%1; % in degrees
 S.targetWindow = 2; % in degrees
 S.targetFixationTime = 0.05; % in seconds
 S.initFixationTime = 0.3; % in seconds
-S.numBGImages = 3;
+S.numBGImages = 2;
 S.fixationPointSTD = 0; % in degrees
 S.fixWindow = 1; % in degrees
 S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\BGImages\';
@@ -20,7 +20,7 @@ S.patchSize = 3.2; % degree
 S.whichType = {'Fractal','Urban'}; %'Fractal', 'Urban', 'Nature', 'Pink'
 S.timePerImage = 6; % second
 S.numRandomPatches = 20;
-
+S.phase2 = 1; % the second phase of FV
 
 % order of trials and bg images
 imagesID = 1:S.numBGImages;
@@ -58,8 +58,9 @@ for typecount = 1:length(S.whichType)
     
 end
 
-
-
+if S.phase2
+S.BGImages2Use = FVresult.StimulusObject.BGImages2Use;
+end
 
 try
     
