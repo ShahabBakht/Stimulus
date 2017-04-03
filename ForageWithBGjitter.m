@@ -2,21 +2,21 @@ function result=ForageWithBGjitter()
 
 
 commandwindow;
-S.ScreenCov_v = 0.4571;
-S.ScreenCov_h = 0.3556;
+S.ScreenCov_v = 0.40;%0.4571;
+S.ScreenCov_h = 0.42;%0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 50;
+S.numTrials = 20;
 S.spatialSTD = 1;%0;%; % in degrees
-S.targetWindow = 2; % in degrees
+S.targetWindow = 1; % in degrees
 S.targetFixationTime = 0.05; % in seconds
 S.initFixationTime = 0.3; % in seconds
-S.numBGImages = 4;
+S.numBGImages = 1;
 S.fixationPointSTD = 0; % in degrees
 S.fixWindow = 1; % in degrees
 S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\allImages\';
 S.maxJitter = 5; % in degrees (the horizontal and vertical jitter of the bg image)
-S.doProbe = 1; % false or true; set true, does the probe test at the end
+S.doProbe = 0; % false or true; set true, does the probe test at the end
 
 
 % order of trials and bg images
@@ -137,7 +137,7 @@ try
     
     
     scaleBGh = (wRect(3) * S.ScreenCov_h/2 - S.maxJitter*S.PPD_X)/(wRect(3) * S.ScreenCov_h/2);
-    scaleBGv = (wRect(3) * S.ScreenCov_v/2 - S.maxJitter*S.PPD_X)/(wRect(3) * S.ScreenCov_v/2);
+    scaleBGv = (wRect(4) * S.ScreenCov_v/2 - S.maxJitter*S.PPD_X)/(wRect(4) * S.ScreenCov_v/2);
     
     windowSubPart_0 = [...
         winWidth/2 + 0 - (wRect(3) * S.ScreenCov_h/2) * scaleBGh,...
@@ -152,8 +152,8 @@ try
     
     
     % Location of the targets on each bg image
-    rangeX = windowSubPart_0(3) - windowSubPart_0(1) - (S.spatialSTD * S.PPD_X);
-    rangeY = windowSubPart_0(4) - windowSubPart_0(2) - (S.spatialSTD * S.PPD_Y);
+    rangeX = windowSubPart_0(3) - windowSubPart_0(1) - 2*(S.spatialSTD * S.PPD_X);
+    rangeY = windowSubPart_0(4) - windowSubPart_0(2) - 2*(S.spatialSTD * S.PPD_Y);
     smallestX = windowSubPart_0(1) + (S.spatialSTD * S.PPD_X);
     smallestY = windowSubPart_0(2) + (S.spatialSTD * S.PPD_Y);
     meanTargetLocation_x = rangeX * rand(S.numBGImages,1) + smallestX;
@@ -176,6 +176,7 @@ try
         my = [];
         fixationX = [];
         fixationY = [];
+        fixState = [];
         
         EyelinkDoDriftCorrection(el);
         thisFixationLocation = normrnd([winWidth/2, winHeight/2],...
@@ -276,9 +277,12 @@ try
     result.thisTargetLocation(:,trcount) = thisTargetLocation;
     % if target should be visible uncomment below lines
 %     Screen('FillOval',el.window, [0, 0 , 0], ...
-%       [thisTargetLocation(1)-5,thisTargetLocation(2)-5,thisTargetLocation(1)+5,thisTargetLocation(2)+5]);
+%       [thisTargetLocation(1)-3,thisTargetLocation(2)-3,thisTargetLocation(1)+3,thisTargetLocation(2)+3]);
 %     Screen('FillOval',el.window, [255, 255 , 255], ...
-%        [thisTargetLocation(1)-2,thisTargetLocation(2)-2,thisTargetLocation(1)+2,thisTargetLocation(2)+2]);
+%        [thisTargetLocation(1)-1,thisTargetLocation(2)-1,thisTargetLocation(1)+1,thisTargetLocation(2)+1]);
+%     
+%    Screen('FrameRect',el.window, [255, 0 , 0], ...
+%        [thisTargetLocation(1)-S.targetWindow * S.PPD_X;thisTargetLocation(2)-S.targetWindow * S.PPD_Y;thisTargetLocation(1)+S.targetWindow * S.PPD_X;thisTargetLocation(2)+S.targetWindow * S.PPD_Y]);
     
     
 
@@ -294,6 +298,7 @@ try
     finalMessage = 'You did not hit the target';
     startTime = GetSecs;
     initDetectionTime = GetSecs;
+    timerZero = GetSecs;
     while GetSecs < startTime + 20
 
     % Query  eyetracker") -
@@ -314,17 +319,24 @@ try
                 mx=[mx,x];
                 my=[my,y];
                 
-                
+
                     evtype=Eyelink('getnextdatatype');
                     % are we in a fixation state?
                     if evtype==el.STARTFIX
                         fixationX = [fixationX,x];
                         fixationY = [fixationY,y];
+                        fixState = [fixState,1];
+                        if abs(fixationX(end) - thisTargetLocation(1))>TargetWindow  * S.PPD_X ...
+                                || abs(fixationY(end) - thisTargetLocation(2))>TargetWindow * S.PPD_Y
+                           timerZero = GetSecs;
+                        end
                         % if yes, are we fixating in a window around the target? 
-                        if abs(mx(end) - thisTargetLocation(1))<=TargetWindow  * S.PPD_X ...
-                                && abs(my(end) - thisTargetLocation(2))<=TargetWindow * S.PPD_Y
-                           
-                            timer = GetSecs - initDetectionTime;
+                        if abs(fixationX(end) - thisTargetLocation(1))<=TargetWindow  * S.PPD_X ...
+                                && abs(fixationY(end) - thisTargetLocation(2))<=TargetWindow * S.PPD_Y
+                           timerON = true;
+                           timer = GetSecs - timerZero;
+%                             timer = GetSecs - initDetectionTime;
+                            
                             
                             % are we fixating for the required fixation
                             % time?
@@ -337,6 +349,8 @@ try
                             end
                             
                         end
+                    else
+                        fixState = [fixState,0];
                     end
                 
             end
@@ -370,6 +384,7 @@ try
     Y{trcount} = my;
     Fixation_x{trcount} = fixationX;
     Fixation_y{trcount} = fixationY;
+    FixationState{trcount} = fixState;
     
     thisJitter_x = 2*(S.maxJitter*S.PPD_X) * rand - (S.maxJitter*S.PPD_X);
     thisJitter_y = 2*(S.maxJitter*S.PPD_Y) * rand - (S.maxJitter*S.PPD_Y);
@@ -390,6 +405,7 @@ try
     result.StimulusObject = S;
     result.FixationX = Fixation_x;
     result.FixationY = Fixation_y;
+    result.FixationState = FixationState;
     
     Eyelink('CloseFile');    
     
