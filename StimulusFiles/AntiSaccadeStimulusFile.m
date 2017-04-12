@@ -54,9 +54,19 @@ for trcount = 1:length(trialsorder);
     thisTargetCenterV = winHeight/2 + sin( thisTargetAngle ) * targetLocationAmp *PPDy;
     thisTargetLocation = [thisTargetCenterH  - (Targetsize*PPDx)./2, thisTargetCenterV - (Targetsize*PPDx)./2, ...
         thisTargetCenterH + (Targetsize*PPDx)./2, thisTargetCenterV + (Targetsize*PPDx)./2];
-
     
-    leftFix = false;
+    leftFix = true;
+    while leftFix
+        Screen('FillOval',window,[255 0 0],firstFixationLocation);
+        Screen('FillOval',window,[0 255 0],secondFixationLocation);
+        Screen('Flip', window);
+        
+        % online eye position tracker - is subject fixating on the first
+        % fixation point?
+        WaitSecs(2);
+        leftFix = false;
+    end
+    
     
     
     while ~leftFix
@@ -65,7 +75,8 @@ for trcount = 1:length(trialsorder);
         Screen('FillOval',window,[0 255 0],secondFixationLocation);
         Screen('Flip', window);
         
-        % online eye position tracker
+        % online eye position tracker - did subject saccade to the second
+        % fixation point?
         WaitSecs(2);
         leftFix = true;
     
