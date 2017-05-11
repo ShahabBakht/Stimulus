@@ -2,16 +2,16 @@ function result=ForageWithBGjitter()
 
 
 commandwindow;
-S.ScreenCov_v = 0.40;%0.4571;
-S.ScreenCov_h = 0.42;%0.3556;
+S.ScreenCov_v = 0.4;%0.40;%0.4571;
+S.ScreenCov_h = 0.4;%0.42;%0.3556;
 S.PPD_X = 15;
 S.PPD_Y = 15;
-S.numTrials = 20;
-S.spatialSTD = 1;%0;%; % in degrees
-S.targetWindow = 1; % in degrees
-S.targetFixationTime = 0.05; % in seconds
+S.numTrials = 10;
+S.spatialSTD = 0;%1;%; % in degrees
+S.targetWindow = 2; % in degrees
+S.targetFixationTime = 0.2; % in seconds
 S.initFixationTime = 0.3; % in seconds
-S.numBGImages = 1;
+S.numBGImages = 15;
 S.fixationPointSTD = 0; % in degrees
 S.fixWindow = 1; % in degrees
 S.BGImagesFolder = 'C:\Users\Shahab\Documents\Shahab\Stimulus\allImages\';
@@ -168,7 +168,7 @@ try
         if trcount > (S.numTrials * S.numBGImages)
             thisBGImageName = BGImages2Use(trcount - (S.numTrials * S.numBGImages),:);
         else
-            thisTrialBGImage = allTrials(trialsOrder(trcount));
+            thisTrialBGImage = allTrials((trcount));%allTrials(trialsOrder(trcount));
             thisBGImageName = BGImages2Use(thisTrialBGImage,:);
         end
         
@@ -322,7 +322,7 @@ try
 
                     evtype=Eyelink('getnextdatatype');
                     % are we in a fixation state?
-                    if evtype==el.STARTFIX
+                    if true%evtype==el.STARTFIX
                         fixationX = [fixationX,x];
                         fixationY = [fixationY,y];
                         fixState = [fixState,1];
@@ -344,6 +344,19 @@ try
                                 initDetectionTime = GetSecs;
                                 Beeper(450,0.4,.15);
                                 finalMessage = 'You hit the target';
+                                
+                                % show the target shortly
+                                Screen('DrawTexture', el.window, imtex, [], windowSubPart); 
+                                Screen('FillOval',el.window, [0, 0 , 0], ...
+                                    [thisTargetLocation(1)-3,thisTargetLocation(2)-3,thisTargetLocation(1)+3,thisTargetLocation(2)+3]);
+                                Screen('FillOval',el.window, [255, 255 , 255], ...
+                                    [thisTargetLocation(1)-1,thisTargetLocation(2)-1,thisTargetLocation(1)+1,thisTargetLocation(2)+1]);
+                                
+                                Screen('FrameRect',el.window, [255, 0 , 0], ...
+                                    [thisTargetLocation(1)-S.targetWindow * S.PPD_X;thisTargetLocation(2)-S.targetWindow * S.PPD_Y;thisTargetLocation(1)+S.targetWindow * S.PPD_X;thisTargetLocation(2)+S.targetWindow * S.PPD_Y]);
+                                Screen('Flip', el.window);
+                                WaitSecs(0.1);
+                                
                                 break
                                 
                             end
