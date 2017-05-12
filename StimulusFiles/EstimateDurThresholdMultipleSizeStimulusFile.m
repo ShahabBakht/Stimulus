@@ -1,4 +1,5 @@
-function EstimateDurThresholdGratingStimulusFile()
+function EstimateDurThresholdMultipleSizeStimulusFile()
+
 % Clear the workspace and the screen
 sca;
 close all;
@@ -6,6 +7,10 @@ clearvars;
 FolderName = 'D:\Data\Psychophysics\Motion Discrimination\';
 TestName = inputdlg('Test Name');
 distance2Screen = 60; % in cm
+stimulusSizes = 3;%1:2:11; % in degree
+numTrials = 40; % trials per condition
+allConditions = repmat(stimulusSizes,1,numTrials);
+trialsOrder = randperm(length(allConditions));
 
 % Setup PTB with some default values
 PsychDefaultSetup(2);
@@ -29,19 +34,20 @@ range                   = 5;
 grain                   = 0.01;
 plotIt                  = 0;
 
-tGuess=[];
-while isempty(tGuess)
-    tGuess=input('Estimate threshold (e.g. -1): ');
+tGuess = 7;
+% while isempty(tGuess)
+%     tGuess=input('Estimate threshold (e.g. -1): ');
+% end
+tGuessSd=20;
+% while isempty(tGuessSd)
+%     tGuessSd=input('Estimate the standard deviation of your guess, above, (e.g. 2): ');
+% end
+questObjects = cell(1,length(stimulusSizes));
+for sizecount = 1:length(stimulusSizes)
+    q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma,grain,range,plotIt);
+    q.normalizePdf=1; % This adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
+    questObjects{sizecount} = q;
 end
-tGuessSd=[];
-while isempty(tGuessSd)
-    tGuessSd=input('Estimate the standard deviation of your guess, above, (e.g. 2): ');
-end
-
-q=QuestCreate(tGuess,tGuessSd,pThreshold,beta,delta,gamma,grain,range,plotIt);
-q.normalizePdf=1; % This adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
-fprintf('Your initial guess was %g +- %g\n',tGuess,tGuessSd);
-
 
 % Skip sync tests for demo purposes only
 Screen('Preference', 'SkipSyncTests', 2);
@@ -67,17 +73,15 @@ ifi = Screen('GetFlipInterval', window);
 %--------------------
 
 % Dimension of the region where will draw the Gabor in pixels
-gaborDimPix = windowRect(4) / 2;
+gaborDimPix = windowRect(4) / 1;
 
-% Sigma of Gaussian
-sigma = gaborDimPix / 15;
 
 % Obvious Parameters
 orientation = 0;
 contrast = 0.92;
 aspectRatio = 1.0;
 phase = 0;
-duration = 1000; % ms
+% duration = 1000; % ms
 % Spatial Frequency (Cycles Per Pixel)
 % One Cycle = Grey-Black-Grey-White-Grey i.e. One Black and One White Lobe
 numCycles = 10;%5;%40;
@@ -94,8 +98,6 @@ preContrastMultiplier = 0.5;
 gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, [],...
     backgroundOffset, disableNorm, preContrastMultiplier);
 
-% Randomise the phase of the Gabors and make a properties matrix.
-propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
 
 % Drift speed for the 2D global motion
 degPerSec = 360 * 2;
@@ -110,8 +112,16 @@ degPerFrame =  degPerSec * ifi;
 leftKey = KbName('LeftArrow');
 rightKey = KbName('RightArrow');
 fixColor = [255 255 255];
-for trcount = 1:1
+for trcount = 1:(length(stimulusSizes) * numTrials)
+    thisSize = allConditions(trialsOrder(trcount));
+    [~,whichCond] = find(stimulusSizes == thisSize);
     
+    % Sigma of Gaussian
+    sigma = (thisSize/2) * min(PPD_w,PPD_h);
+    
+    % Set Gabor parameters.
+    propertiesMat = [phase, freq, sigma, contrast, aspectRatio, 0, 0, 0];
+
     % initial fixation
     [xCenter, yCenter] = RectCenter(windowRect);
     Screen('DrawDots', window, [xCenter, yCenter], 20, white);
@@ -119,7 +129,7 @@ for trcount = 1:1
     KbWait;
     WaitSecs(0.3);
     % Get recommended level.  Choose your favorite algorithm.
-	tTest=QuestQuantile(q);	% Recommended by Pelli (1987), and still our favorite.
+	tTest=QuestQuantile(questObjects{whichCond});	% Recommended by Pelli (1987), and still our favorite.
 % 	tTest=QuestMean(q);		% Recommended by King-Smith et al. (1994)
 % 	tTest=QuestMode(q);		% Recommended by Watson & Pelli (1983)
 	
@@ -162,19 +172,23 @@ end
 Screen('DrawDots', window, [xCenter, yCenter], 20, fixColor);
 Screen('Flip',window);
 WaitSecs(0.2);
-q=QuestUpdate(q,tTest,responseForQUEST(trcount));
+qtemp=QuestUpdate(questObjects{whichCond},tTest,responseForQUEST(trcount));
+questObjects{whichCond} = qtemp;
+Result.QUESTObject = questObjects;
+save([FolderName,TestName{1}],'Result');
 
 end
 
-t=QuestMean(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
-sd=QuestSd(q);
+% t=QuestMean(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
+% sd=QuestSd(q);
 % fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
 
 % Clear screen
 sca;
 
-Result.SubjectResponse = Response;
-Result.DriftDirection = DIR;
-Result.QUESTObject = q;
+% Result.SubjectResponse = Response;
+% Result.DriftDirection = DIR;
+Result.QUESTObject = questObjects;
 save([FolderName,TestName{1}],'Result');
+
 end
