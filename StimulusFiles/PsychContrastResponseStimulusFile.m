@@ -1,3 +1,7 @@
+% This function estimates the contrast response function by testing the
+% subject at multiple contrasts of drifting gabor stimuli. It needs to set
+% the contrast enquiries, size of the stimulus, and duration.
+
 function PsychContrastResponseStimulusFile()
 
 % Clear the workspace and the screen

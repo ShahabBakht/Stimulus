@@ -1,3 +1,8 @@
+% This function uses QUEST method to estimate the duration threshold for
+% motion discrimination with drifting gratings. 
+% This function needs to be modified to change the sizes, etc. to degrees
+% (in current version in pixels)
+
 function EstimateDurThresholdGratingStimulusFile()
 % Clear the workspace and the screen
 sca;

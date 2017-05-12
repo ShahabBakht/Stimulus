@@ -1,4 +1,9 @@
+% This function estimates the duration threshold using QUEST method for
+% drifting gabor stimuli with multiple stimulus sizes. It only needs the
+% enquired stimulus sizes and the contrast.
+
 function EstimateDurThresholdMultipleSizeStimulusFile()
+
 
 % Clear the workspace and the screen
 sca;

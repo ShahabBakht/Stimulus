@@ -1,3 +1,7 @@
+% This function reconstructs the psychophysical surround suppression with
+% drifting gratings. It needs the duration, to-be-tested stimulus sizes,
+% and contrast.
+
 function PsychSizeTuningStimulusFile()
 
 % Clear the workspace and the screen
