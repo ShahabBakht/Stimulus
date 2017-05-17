@@ -83,7 +83,7 @@ gaborDimPix = windowRect(4) / 1;
 
 % Obvious Parameters
 orientation = 0;
-contrast = 0.92;
+contrast = 0.028;
 aspectRatio = 1.0;
 phase = 0;
 % duration = 1000; % ms
