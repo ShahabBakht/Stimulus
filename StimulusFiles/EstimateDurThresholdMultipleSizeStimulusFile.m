@@ -13,7 +13,7 @@ FolderName = 'D:\Data\Psychophysics\Motion Discrimination\';
 TestName = inputdlg('Test Name');
 distance2Screen = 60; % in cm
 stimulusSizes = 3;%1:2:11; % in degree
-numTrials = 40; % trials per condition
+numTrials = 50; % trials per condition
 allConditions = repmat(stimulusSizes,1,numTrials);
 trialsOrder = randperm(length(allConditions));
 
@@ -22,7 +22,7 @@ PsychDefaultSetup(2);
 
 % Set the screen number to the external secondary monitor if there is one
 % connected
-screenNumber = max(Screen('Screens'));
+screenNumber = 0;%max(Screen('Screens'));
 [width, height]=Screen('DisplaySize', screenNumber);
 
 % Define black, white and grey
@@ -55,7 +55,7 @@ for sizecount = 1:length(stimulusSizes)
 end
 
 % Skip sync tests for demo purposes only
-Screen('Preference', 'SkipSyncTests', 2);
+Screen('Preference', 'SkipSyncTests', 0);
 
 % Open the screen
 [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], 32, 2,...
