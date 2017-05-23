@@ -21,7 +21,7 @@ trialsOrder = randperm(length(allConditions));
 orientation = 0;
 aspectRatio = 1.0;
 phase = 0;
-duration = 30; % ms
+duration = 170; % ms
 
 
 
@@ -128,7 +128,7 @@ for trcount = 1:(length(stimulusContrasts) * numTrials)
 %     Time0 = GetSecs;
 %     while GetSecs < Time0 + duration/1000
     Priority(topPriorityLevel);
-    tic;
+    
     for frame = 1:numFrames
 
         Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
@@ -137,13 +137,13 @@ for trcount = 1:(length(stimulusContrasts) * numTrials)
 
         % Flip to the screen
         vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
-        toc;
+       
         % Increment the phase of our Gabors
         phase = phase +  DIR(trcount) * degPerFrame;%
         propertiesMat(:, 1) = phase';
         
     end
-    toc;
+    
     Priority(0);
     
     vbl = Screen('Flip', window);

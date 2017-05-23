@@ -189,8 +189,9 @@ save([FolderName,TestName{1}],'Result');
 
 end
 
-t=QuestQuantile(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
-sd=QuestSd(q);
+qfinal = Result.QUESTObject{end};
+t=QuestQuantile(qfinal);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
+sd=QuestSd(qfinal);
 fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
 
 % Clear screen
