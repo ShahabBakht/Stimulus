@@ -80,6 +80,7 @@ degPerFrame =  degPerSec * ifi;
 numCycles = 10;%5;%40;
 freq = numCycles / gaborDimPix;
 
+topPriorityLevel = MaxPriority(window);
 
 % Build a procedural gabor texture (Note: to get a "standard" Gabor patch
 % we set a grey background offset, disable normalisation, and set a
@@ -104,7 +105,7 @@ leftKey = KbName('LeftArrow');
 rightKey = KbName('RightArrow');
 fixColor = [255 255 255];
 allCondTrialCount = zeros(length(stimulusContrasts),1);
-tic;
+
 for trcount = 1:(length(stimulusContrasts) * numTrials)
     thisContrast = allConditions(trialsOrder(trcount));
     [~,whichCond] = find(stimulusContrasts == thisContrast);
@@ -116,25 +117,34 @@ for trcount = 1:(length(stimulusContrasts) * numTrials)
     % initial fixation
     [xCenter, yCenter] = RectCenter(windowRect);
     Screen('DrawDots', window, [xCenter, yCenter], 20, white);
-    Screen('Flip',window);
+    vbl = Screen('Flip',window);
     KbWait;
     WaitSecs(0.5);
     
     DIR(trcount) = sign(rand - 0.5);
+    numFrames = round(duration / (1000 * ifi));
+    waitframes = 1;
     
-    Time0 = GetSecs;
-    while GetSecs < Time0 + duration/1000
+%     Time0 = GetSecs;
+%     while GetSecs < Time0 + duration/1000
+    Priority(topPriorityLevel);
+    tic;
+    for frame = 1:numFrames
+
         Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
             kPsychDontDoRotation, propertiesMat');
-        
+        Screen('DrawingFinished', window);
+
         % Flip to the screen
-        Screen('Flip', window);
-        
+        vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+        toc;
         % Increment the phase of our Gabors
         phase = phase +  DIR(trcount) * degPerFrame;%
         propertiesMat(:, 1) = phase';
         
     end
+    toc;
+    Priority(0);
     
     vbl = Screen('Flip', window);
     [secs,KeyCode,deltaSecs] = KbWait;
@@ -157,7 +167,7 @@ for trcount = 1:(length(stimulusContrasts) * numTrials)
     WaitSecs(0.2);
     
 end
-toc;
+
 % Clear screen
 sca;
 

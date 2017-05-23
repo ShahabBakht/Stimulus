@@ -22,7 +22,7 @@ PsychDefaultSetup(2);
 
 % Set the screen number to the external secondary monitor if there is one
 % connected
-screenNumber = 0;%max(Screen('Screens'));
+screenNumber = max(Screen('Screens'));
 [width, height]=Screen('DisplaySize', screenNumber);
 
 % Define black, white and grey
@@ -117,6 +117,7 @@ degPerFrame =  degPerSec * ifi;
 leftKey = KbName('LeftArrow');
 rightKey = KbName('RightArrow');
 fixColor = [255 255 255];
+topPriorityLevel = MaxPriority(window);
 for trcount = 1:(length(stimulusSizes) * numTrials)
     thisSize = allConditions(trialsOrder(trcount));
     [~,whichCond] = find(stimulusSizes == thisSize);
@@ -130,7 +131,7 @@ for trcount = 1:(length(stimulusSizes) * numTrials)
     % initial fixation
     [xCenter, yCenter] = RectCenter(windowRect);
     Screen('DrawDots', window, [xCenter, yCenter], 20, white);
-    Screen('Flip',window);
+    vbl = Screen('Flip',window);
     KbWait;
     WaitSecs(0.3);
     % Get recommended level.  Choose your favorite algorithm.
@@ -143,21 +144,25 @@ for trcount = 1:(length(stimulusSizes) * numTrials)
     %   tTest=min(-0.05,max(-3,tTest));
     duration(trcount) = 2^tTest;
     DIR(trcount) = sign(rand - 0.5);
+    numFrames = round(duration(trcount) / (1000 * ifi));
+    waitframes = 1;
     
-Time0 = GetSecs;
-while GetSecs < Time0 + duration(trcount)/1000
+% Time0 = GetSecs;
+% while GetSecs < Time0 + duration(trcount)/1000
+Priority(topPriorityLevel);
+for frame = 1:numFrames
     Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
         kPsychDontDoRotation, propertiesMat');
     
     % Flip to the screen
-    Screen('Flip', window);
+    vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
     % Increment the phase of our Gabors
     phase = phase +  DIR(trcount) * degPerFrame;%
     propertiesMat(:, 1) = phase';
     
 end
-
+Priority(0);
 vbl = Screen('Flip', window);
 [secs,KeyCode,deltaSecs] = KbWait;
 if KeyCode(leftKey)
@@ -184,9 +189,9 @@ save([FolderName,TestName{1}],'Result');
 
 end
 
-% t=QuestMean(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
-% sd=QuestSd(q);
-% fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
+t=QuestQuantile(q);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
+sd=QuestSd(q);
+fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
 
 % Clear screen
 sca;
