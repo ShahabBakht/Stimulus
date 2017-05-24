@@ -2,17 +2,17 @@
 % drifting gabor stimuli with multiple stimulus sizes. It only needs the
 % enquired stimulus sizes and the contrast.
 
-function EstimateDurThresholdMultipleSizeStimulusFile()
+function trial = EstimateDurThresholdMultipleSizeStimulusFile(qin)
 
 
 % Clear the workspace and the screen
 sca;
-close all;
-clearvars;
-FolderName = 'D:\Data\Psychophysics\Motion Discrimination\';
+% close all;
+% clearvars;
+FolderName = '/Users/shahab/MNI/Data/Psychophysics/Motion Discrimination/';
 TestName = inputdlg('Test Name');
 distance2Screen = 60; % in cm
-stimulusSizes = 3;%1:2:11; % in degree
+stimulusSizes = .5;%1:2:11; % in degree
 numTrials = 50; % trials per condition
 allConditions = repmat(stimulusSizes,1,numTrials);
 trialsOrder = randperm(length(allConditions));
@@ -39,7 +39,11 @@ range                   = 5;
 grain                   = 0.01;
 plotIt                  = 0;
 
+if nargin == 1
+    tGuess = QuestQuantile(qin);
+else
 tGuess = 7;
+end
 % while isempty(tGuess)
 %     tGuess=input('Estimate threshold (e.g. -1): ');
 % end
@@ -58,17 +62,19 @@ end
 Screen('Preference', 'SkipSyncTests', 0);
 
 % Open the screen
+
+try;
 [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey, [], 32, 2,...
     [], [],  kPsychNeed32BPCFloat);
 
 % Calculate pixel per degree
-PPcm = windowRect(3)/(width/10);
+PPcm = windowRect(3)/(width/20);
 widthDegree = 2 * atan((width/20)/distance2Screen) * 180/pi;
 heightDegree = 2 * atan((height/20)/distance2Screen) * 180/pi;
 cmPD_w = (width/10) / widthDegree;
-cmPD_h = (width/10) / heightDegree;
-PPD_w = PPcm / cmPD_w;
-PPD_h = PPcm / cmPD_h;
+cmPD_h = (height/10) / heightDegree;
+PPD_w = PPcm * cmPD_w;
+PPD_h = PPcm * cmPD_h;
 
 % Query the frame duration
 ifi = Screen('GetFlipInterval', window);
@@ -187,15 +193,20 @@ questObjects{whichCond} = qtemp;
 Result.QUESTObject = questObjects;
 save([FolderName,TestName{1}],'Result');
 
+
 end
 
+catch
+end
+% Clear screen
+sca;
+
 qfinal = Result.QUESTObject{end};
+trial=QuestTrials(qfinal);
+plot(2.^qfinal.intensity(1:numTrials));hold on;
 t=QuestQuantile(qfinal);		% Recommended by Pelli (1989) and King-Smith et al. (1994). Still our favorite.
 sd=QuestSd(qfinal);
 fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
-
-% Clear screen
-sca;
 
 % Result.SubjectResponse = Response;
 % Result.DriftDirection = DIR;
