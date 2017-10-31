@@ -16,7 +16,7 @@ try
     AssertOpenGL;
     duration = 5; % how long to show the dots in seconds
 
-    curScreen = 1;
+    curScreen = 0;
     dontclear = 0;
 
     [curWindow, screenRect] = Screen('OpenWindow', curScreen, [0,0,0],[],32, 2);
@@ -49,7 +49,7 @@ try
     coh = 0.512;
     speed = 5;
     direction = 0;    
-    dotSize = 2;
+    dotSize = 4;
 
     maxDotsPerFrame = 150; % By trial and error and depends on graphics card
 

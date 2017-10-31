@@ -12,8 +12,8 @@ sca;
 FolderName = '/Users/shahab/MNI/Data/Psychophysics/Motion Discrimination/';
 TestName = inputdlg('Test Name');
 distance2Screen = 60; % in cm
-stimulusSizes = .5;%1:2:11; % in degree
-numTrials = 50; % trials per condition
+stimulusSizes = 1;%1:2:11; % in degree
+numTrials = 100; % trials per condition
 allConditions = repmat(stimulusSizes,1,numTrials);
 trialsOrder = randperm(length(allConditions));
 
@@ -42,7 +42,7 @@ plotIt                  = 0;
 if nargin == 1
     tGuess = QuestQuantile(qin);
 else
-tGuess = 7;
+tGuess = 5.0;%7;
 end
 % while isempty(tGuess)
 %     tGuess=input('Estimate threshold (e.g. -1): ');
@@ -68,11 +68,11 @@ try;
     [], [],  kPsychNeed32BPCFloat);
 
 % Calculate pixel per degree
-PPcm = windowRect(3)/(width/20);
+PPcm = windowRect(3)/(width/10);
 widthDegree = 2 * atan((width/20)/distance2Screen) * 180/pi;
 heightDegree = 2 * atan((height/20)/distance2Screen) * 180/pi;
 cmPD_w = (width/10) / widthDegree;
-cmPD_h = (height/10) / heightDegree;
+cmPD_h = (width/10) / heightDegree;
 PPD_w = PPcm * cmPD_w;
 PPD_h = PPcm * cmPD_h;
 
@@ -89,7 +89,7 @@ gaborDimPix = windowRect(4) / 1;
 
 % Obvious Parameters
 orientation = 0;
-contrast = 0.028;
+contrast = 0.92;
 aspectRatio = 1.0;
 phase = 0;
 % duration = 1000; % ms
@@ -105,7 +105,7 @@ freq = numCycles / gaborDimPix;
 % https://groups.yahoo.com/neo/groups/psychtoolbox/conversations/topics/9174
 backgroundOffset = [0.5 0.5 0.5 0.0];
 disableNorm = 1;
-preContrastMultiplier = 0.5;
+preContrastMultiplier = 1;%0.5;
 gabortex = CreateProceduralGabor(window, gaborDimPix, gaborDimPix, [],...
     backgroundOffset, disableNorm, preContrastMultiplier);
 
@@ -139,9 +139,14 @@ for trcount = 1:(length(stimulusSizes) * numTrials)
     Screen('DrawDots', window, [xCenter, yCenter], 20, white);
     vbl = Screen('Flip',window);
     KbWait;
-    WaitSecs(0.3);
+    Screen('FillRect',window,grey);
+%     Screen('DrawTextures', window, gabortex, [], [], orientation, [], [], [], [],...
+%         kPsychDontDoRotation, propertiesMat');
+    vbl = Screen('Flip',window);
+    WaitSecs(.10);
+    
     % Get recommended level.  Choose your favorite algorithm.
-	tTest=QuestQuantile(questObjects{whichCond});	% Recommended by Pelli (1987), and still our favorite.
+	tTest=QuestMean(questObjects{whichCond});	% Recommended by Pelli (1987), and still our favorite.
 % 	tTest=QuestMean(q);		% Recommended by King-Smith et al. (1994)
 % 	tTest=QuestMode(q);		% Recommended by Watson & Pelli (1983)
 	
@@ -187,7 +192,7 @@ else
 end
 Screen('DrawDots', window, [xCenter, yCenter], 20, fixColor);
 Screen('Flip',window);
-WaitSecs(0.2);
+WaitSecs(0.3);
 qtemp=QuestUpdate(questObjects{whichCond},tTest,responseForQUEST(trcount));
 questObjects{whichCond} = qtemp;
 Result.QUESTObject = questObjects;
@@ -211,6 +216,7 @@ fprintf('Final threshold estimate (mean+-sd) is %.2f +- %.2f\n',2^t,2^sd);
 % Result.SubjectResponse = Response;
 % Result.DriftDirection = DIR;
 Result.QUESTObject = questObjects;
+Result.trial = trial;
 save([FolderName,TestName{1}],'Result');
 
 end

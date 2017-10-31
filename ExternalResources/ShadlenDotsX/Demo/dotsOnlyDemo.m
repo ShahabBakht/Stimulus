@@ -36,12 +36,14 @@ try
     dotInfo.cohSet = [0];
     dotInfo.dir = [setdir];
     dotInfo.maxDotTime = [1];
-    
+    dotInfo.changetime = [];
     dotInfo.trialtype = [2 1];
     dotInfo.dotColor = [255 255 255]; % default white dots
     dotInfo.dotSize = 2;
+    dotInfo.isMovingTarget = [];
+    
     [frames, rseed, start_time, end_time, response, response_time] = ...
-        dotsX(screenInfo, dotInfo,targets); 
+        dotsX(screenInfo, dotInfo,targets);
     
     
     pause(0)
@@ -51,24 +53,26 @@ try
     
     dotInfo.dir = [setdir];
     dotInfo.maxDotTime = [1];
-    
-    
+    dotInfo.changetime = [];
+    dotInfo.isMovingTarget = [];
     dotInfo.apXYD = [stepsize 0 40];
     dotInfo.trialtype = [2, 1];
     dotInfo.isMovingCenter = true;
     [frames, rseed, start_time, end_time, response, response_time] = ...
         dotsX(screenInfo, dotInfo,targets );
- pause(1)
-clear RandomDraw
+    pause(1)
+    clear RandomDraw
     end
     % Clear the screen and exit
    
     closeExperiment;
     
-catch
+catch ME
+    closeExperiment;
+    rethrow(ME);
     disp('caught error');
     lasterr
-    closeExperiment;
+    
     
 end;
 
